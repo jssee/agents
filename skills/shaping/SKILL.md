@@ -33,6 +33,8 @@ Shaping is a conversation, not a document-generation exercise. Your job is to be
 - Challenge shapes that sound good but don't actually address requirements
 - Surface tradeoffs the human hasn't considered
 
+**Questions before shapes.** Before proposing any shapes, ask the questions you need answered. Do this in a single focused message — not a wall of questions, but the 2–3 that would most change what you build. Wait for answers. A shape presented before the problem is understood will be revised anyway, and forces the human to read and react to something premature.
+
 **Don't rush to document.** Think first, write when the picture is clear enough to be useful.
 
 ## Requirements (R)
@@ -52,14 +54,15 @@ Requirements describe **what's needed**, not what satisfies it.
 
 **Negotiate status.** Not everything is `must`. Ask: "What happens if we don't do this?" If the answer is "it's fine for now," that's `nice` or `out`.
 
-## Shapes (A, B, C)
+## Shapes (A, B, C…)
 
-Shapes are mutually exclusive solution approaches. Pick one.
+Shapes are mutually exclusive solution approaches. Only present shapes that are genuinely viable — ones that could actually be chosen. **One strong shape is better than three where two are filler.** There is no minimum.
 
 - Lettered: `A, B, C…`
 - Each shape is a short list of **mechanisms** — concrete things you build or change
 - Mechanisms describe *what*, not *why* (requirements already cover *why*)
 - If two shapes share most mechanisms, they're not different shapes — they're variants of one shape
+- All presented shapes get the same level of thought and detail. If a shape doesn't deserve that, it's not a real shape — drop it
 
 **Parts must be mechanisms:**
 
@@ -128,6 +131,9 @@ If writing `shape.md`, use this as a starting point — not a mandate. Use what'
 
 ## Red Flags
 
+- **Presenting shapes before asking questions** — if the problem isn't understood, the shapes will be wrong. Ask first.
+- **Shape padding** — weak alternatives included just to have multiple options. If a shape couldn't realistically win, it shouldn't be there. Drop it.
+- **Uneven shape development** — one shape with a detailed mechanism list, others with one vague line. This signals a foregone conclusion. Either develop all shapes properly or remove the weak ones.
 - **Requirements that are solutions in disguise** — find the problem underneath
 - **Shapes that are identical except for one detail** — that's one shape with a decision point, not two shapes
 - **"We need all of these"** — if everything is `must`, nothing is prioritized. Push back.

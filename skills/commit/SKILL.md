@@ -1,35 +1,80 @@
 ---
 name: commit
-description: Use when committing code changes, writing commit messages, or formatting git history.
+description: Use when committing code changes, deciding whether to create, amend, or fix up commits, writing commit messages, or cleaning up git history.
 ---
 
-# Commit Messages
+# Commit Workflow
 
-Follow these conventions when creating commits.
+Create surgical commits that match the repo's history and keep reviewable progress in git.
 
 ## Prerequisites
 
-Before committing, ensure you're working on a feature branch, not the main branch.
+Before creating or rewriting a commit, inspect the current branch and recent history:
 
 ```bash
-# Check current branch
 git branch --show-current
+git status --short --branch
+git log -10 --format='%h %s'
 ```
 
-If you're on `main` or `master`, aski to create a new branch first:
+- If recent commits show a clear pattern, imitate it. Match its type names, scope usage,
+  capitalization, and issue reference style.
+- If you're on `main` or `master`, create a new branch before proceeding:
 
 ```bash
-# Create and switch to a new branch
 git switch -b <type>/<short-description>
 ```
 
 Branch naming should follow the pattern: `<type>/<short-description>` where type matches the commit type (e.g., `feat/add-user-auth`, `fix/null-pointer-error`, `ref/extract-validation`).
 
+## Decide What Kind of Commit This Is
+
+Classify the change yourself before choosing a commit message or history operation.
+
+Determine:
+
+1. Is this a new feature, an enhancement to existing behavior, or a fix?
+2. Is it behavior-preserving cleanup, performance work, docs, tests, or maintenance instead?
+3. Does it belong inside an existing unpublished commit on this branch?
+4. Can it stand alone as a single reviewable decision?
+
+Use the answer to pick the smallest correct commit:
+
+- `feat`: new feature or user-visible enhancement
+- `fix`: correction to broken behavior
+- `ref`: behavior-neutral restructuring
+- `perf`: measurable performance improvement
+- `docs`, `test`, `build`, `ci`, `chore`, `style`, `meta`, `license`: use when those are the real change
+
+If the repo uses a different established vocabulary or format, imitate that instead of forcing a new convention.
+
+## Choose Between New Commit, Amend, and Fixup
+
+Do not bundle unrelated changes into a single commit. Commits must be surgical and focused.
+
+When the change clearly belongs in an existing unpublished commit:
+
+- Use `git commit --amend` when it belongs in `HEAD`
+- Use `git commit --amend --no-edit` when the message still fits
+- Use `git commit --fixup=<sha>` when it belongs in an older unpublished commit
+- Use `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash` to fold fixups before handing off or opening a PR
+
+Before rewriting history, check whether the target commit has been published:
+
+```bash
+git rev-parse --abbrev-ref --symbolic-full-name @{upstream}
+git merge-base --is-ancestor <sha> @{upstream}
+```
+
+- If the branch has no upstream, local history is unpublished: amend and fix up freely
+- If the target commit is not on the upstream branch yet, amend and fix up freely
+- If the target commit is already on the upstream branch, ask only if rewriting published history is necessary; otherwise create a new commit
+
+Commit early and often once a stable slice exists. Do not leave substantive progress only in the worktree, and do not hand off work before it exists in git history.
+
 ## Format
 
-First, run `git log -5 --oneline` to see the commit history and match any existing commit format.
-
-otherwise, use this format:
+If history does not show a clear established pattern, use this fallback format:
 
 ```
 <type>(<scope>): <subject>
@@ -45,7 +90,7 @@ The header is required. Scope is optional. All lines must stay under 100 charact
 
 | Type | Purpose |
 |------|---------|
-| `feat` | New feature |
+| `feat` | New feature or enhancement |
 | `fix` | Bug fix |
 | `ref` | Refactoring (no behavior change) |
 | `perf` | Performance improvement |
@@ -157,4 +202,8 @@ GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash <sha>^
 - Commits should be independently reviewable
 - The repository should be in a working state after each commit
 - Commits must reveal intent, isolate decisions, and let us audit progress.
-- Logs should be concise and logical; use `--fixup=<sha>`, `--amend`, and `rebase` liberally.
+- Use `--fixup=<sha>`, `--amend`, and `rebase` liberally for unpublished history
+- Always set `GIT_SEQUENCE_EDITOR=:` for agent-driven interactive rebases
+- Ask only when rewriting already-pushed history is necessary
+- Commit early and often when a stable slice exists
+- Do not hand off work before it exists in git history

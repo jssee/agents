@@ -1,6 +1,6 @@
 ---
 name: slicing
-description: Use after shaping to break a selected solution into vertical implementation increments. Each slice must be demo-able.
+description: Use when planning how to build something in ordered, demo-able increments. Breaks a solution into vertical slices where each one cuts through all layers to deliver something visible. Trigger on phrases like "break this down", "what's V1", "plan the rollout", "MVP then iterate", "ship incrementally", or whenever a plan has multiple pieces that need ordering. Natural follow-up to the `shaping` skill, but any clear description of what to build is enough — a `shape.md` is not required.
 ---
 
 # Slicing
@@ -13,11 +13,11 @@ Slicing breaks a shaped solution into ordered, vertical implementation increment
 
 ## When to Use
 
-- After shaping has selected a solution (shape)
-- The selected shape has multiple mechanisms that need ordering
+- A solution is chosen (from shaping or otherwise) with multiple mechanisms that need ordering
 - You need to plan incremental delivery
+- The user wants to know what V1 looks like vs. later versions
 
-**Not for:** Work small enough to build in one shot. If the shape has 2-3 mechanisms and the path is obvious, just build it.
+**Not for:** Work small enough to build in one shot. If there are 2-3 mechanisms and the path is obvious, just build it.
 
 ## Prerequisites
 
@@ -41,16 +41,13 @@ A slice is **vertical** — it cuts through UI, logic, and data to deliver a wor
 
 2. **Each subsequent slice adds one working mechanism.** Not one file, not one layer — one thing the user can see or do that they couldn't before.
 
-3. **Max 9 slices.** If you need more, the shape is too big. Go back to shaping and split the problem.
+3. **Max 9 slices.** Few enough to hold in your head at once. If you need more, the shape is too big — go back to shaping and split the problem.
 
 4. **Order by dependency, not importance.** V2 might be less important than V5, but V5 depends on V2's mechanism being in place.
 
 ## Output
 
-When slicing is done, ask the user where the artifacts should live:
-
-- **Append to `shape.md` or create `slices.md` in the repo**
-- **Other** — the user may prefer an external tool (task tracker, wiki, etc.). Summarize the slices in whatever format they need so they can capture it themselves.
+Ask where to capture output — append to `shape.md`, create `slices.md`, or put it in a task tracker or wiki — and format the summary to fit.
 
 If writing to a file, keep it minimal:
 

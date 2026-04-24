@@ -1,6 +1,6 @@
 ---
 name: shaping
-description: Use when defining what to build and why. Separates problems from solutions, evaluates options with binary fit checks, and produces a lightweight shaping doc. User can choose to opt out of this approach.
+description: Use when scoping work or choosing between approaches before writing code. Separates problems from solutions, evaluates options with binary fit checks, and produces a lightweight shaping doc. Trigger on phrases like "not sure which approach", "should we build X or Y", "what's the scope", "tradeoffs between", "before we start", or whenever multiple viable solutions exist and none is obviously right. Pairs with the `slicing` skill, which plans how to build the selected shape.
 ---
 
 # Shaping
@@ -25,21 +25,38 @@ Shaping is thinking before building. It answers two questions:
 
 ## The Conversation
 
-Shaping is a conversation, not a document-generation exercise. Your job is to be a thinking partner:
+Shaping is a thinking partnership, not a document-generation exercise:
 
-- Ask questions that expose hidden requirements
-- Push back on vague problem statements — "what specifically hurts?"
 - Propose concrete solution mechanisms, not intentions
 - Challenge shapes that sound good but don't actually address requirements
 - Surface tradeoffs the human hasn't considered
 
 **Don't rush to document.** Think first, write when the picture is clear enough to be useful.
 
+## Clarify First
+
+Before proposing shapes, clear ambiguity in the original request with a brief back-and-forth. Shapes built on unexamined assumptions waste work, and the user usually has context you lack.
+
+**What to probe:**
+- **Purpose** — what's the underlying problem? What hurts right now?
+- **Success criteria** — how do we know it worked? What's "good enough"?
+- **Constraints** — deadlines, stack, existing systems, team capacity
+- **Hidden assumptions** — things treated as obvious that might not be (scale, audience, who operates it, failure modes)
+- **Scope** — what's explicitly out? v1 vs. later?
+
+**How to ask:**
+- One question at a time, or a tight batch of 2–3 closely related ones. No walls of questions.
+- Prefer multiple choice — faster for the user than open-ended, and surfaces options they may not have considered
+- Scale to the request: a small ask may need one check; a feature-sized ask may need several rounds
+- If the request spans multiple independent subsystems, flag that first — decompose before clarifying details
+
+**When to skip:** Truly unambiguous requests where the shapes are already obvious. Bias toward asking — under-asking costs more than one extra exchange. But don't fire questions to look thorough; each one should close a specific ambiguity that would change a requirement or a shape.
+
 ## Requirements (R)
 
 Requirements describe **what's needed**, not what satisfies it.
 
-- Numbered: `R0, R1, R2…` — max 9 top-level
+- Numbered: `R0, R1, R2…` — max 9 top-level (few enough to hold in your head at once; if you need more, you're solving multiple problems)
 - Each has a status: `core | must | nice | out`
 - A requirement states a problem or constraint, never a solution
 - If a requirement sounds like a solution, there's a hidden problem underneath — find it
@@ -92,12 +109,9 @@ The decision tool. A matrix of Requirements × Shapes.
 
 ## Output
 
-When shaping is done, ask the user where the artifacts should live:
+Ask where to capture output — repo file (e.g., `shape.md`), task tracker, or wiki — and format the summary to fit. `shape.md` is a lightweight working doc, not a specification.
 
-- **Create `shape.md` in the repo** — lightweight working doc, not a specification
-- **Other** — the user may prefer an external tool (task tracker, wiki, etc.). Summarize the shaping output in whatever format they need so they can capture it themselves.
-
-If writing `shape.md`, use this as a starting point — not a mandate. Use what's useful, skip what isn't. The fit check table is the one non-negotiable — it's where thinking becomes visible.
+If writing `shape.md`, use the template below as a starting point, not a mandate. The fit check table is the one non-negotiable — it's where thinking becomes visible.
 
 ```markdown
 # [Project Name] — Shape
@@ -126,6 +140,8 @@ If writing `shape.md`, use this as a starting point — not a mandate. Use what'
 [Which shape and why. 1-2 sentences.]
 ```
 
+Once a shape is selected, if its mechanisms need ordering into increments, hand off to the `slicing` skill.
+
 ## Red Flags
 
 - **Requirements that are solutions in disguise** — find the problem underneath
@@ -134,3 +150,4 @@ If writing `shape.md`, use this as a starting point — not a mandate. Use what'
 - **Fit check with all ✅** — either the shapes aren't different enough or requirements aren't specific enough
 - **Giant requirements list** — if you have more than 9, you're solving multiple problems. Split them.
 - **Premature detail** — shaping decides *what* and *which approach*, not *how exactly*. Implementation details belong in slicing.
+- **Jumping to shapes on an ambiguous request** — if you can see two plausible interpretations of what the user wants, ask before shaping. You'll shape the wrong thing otherwise.

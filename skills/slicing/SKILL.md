@@ -1,85 +1,100 @@
 ---
 name: slicing
-description: Use when planning how to build something in ordered, demo-able increments. Breaks a solution into vertical slices where each one cuts through all layers to deliver something visible. Trigger on phrases like "break this down", "what's V1", "plan the rollout", "MVP then iterate", "ship incrementally", or whenever a plan has multiple pieces that need ordering. Natural follow-up to the `shaping` skill, but any clear description of what to build is enough — a `shape.md` is not required.
+description: Use after an approach is chosen and the user wants to build it incrementally. Helps turn an agreed direction into ordered, demo-able slices. Trigger on phrases like "break this down", "what's V1", "plan the rollout", "MVP then iterate", "ship incrementally", or whenever the work has multiple pieces that need sequencing. Natural follow-up to `shaping`, but any clear description of what to build is enough.
 ---
 
 # Slicing
 
-## Overview
+Use this skill to align on how to ship an agreed direction in small, demo-able increments.
 
-Slicing breaks a shaped solution into ordered, vertical implementation increments. Each slice cuts through all layers to deliver something you can demonstrate.
+## Goal
 
-**Core principle:** Every slice must be demo-able. If you can't describe what someone would see or do to verify the slice works, it's not a slice — it's a layer.
+Turn a chosen approach into a short sequence of vertical slices.
 
-## When to Use
+A slice is valid only if someone can interact with it or observe it working.
 
-- A solution is chosen (from shaping or otherwise) with multiple mechanisms that need ordering
-- You need to plan incremental delivery
-- The user wants to know what V1 looks like vs. later versions
+Do not default to producing a formal plan document. Keep the interaction lightweight unless the user asks for a file, task tracker, or wiki-ready output.
 
-**Not for:** Work small enough to build in one shot. If there are 2-3 mechanisms and the path is obvious, just build it.
+## Operating rules
 
-## Prerequisites
+* Start from the agreed direction, selected approach, or current understanding of what to build.
+* If the direction is still unclear, ask at most 2-3 questions before slicing.
+* Each slice must have a demo statement.
+* V1 should be the smallest end-to-end path through the system.
+* Each later slice should add one visible capability or behavior.
+* Prefer vertical slices over horizontal layers.
+* Order by dependency first, then risk reduction, then user value.
+* Use at most 9 slices. If more are needed, the approach is probably too large and should be reshaped.
+* Avoid implementation specs unless the slice would otherwise be ambiguous.
 
-A selected shape with its mechanisms listed. Typically from a `shape.md` produced by the `shaping` skill, but any clear description of what to build works.
+## Slice test
 
-## What Makes a Good Slice
+A good slice answers:
 
-A slice is **vertical** — it cuts through UI, logic, and data to deliver a working increment.
+> What can someone see, do, or verify after this ships?
 
-| ✅ Vertical slice | ❌ Horizontal layer |
-|---|---|
-| "Widget shows real data from API" | "Set up database schema" |
-| "User can search and see filtered results" | "Build search API endpoint" |
-| "Admin sees who changed a record" | "Add audit logging infrastructure" |
+Good:
 
-**The demo test:** Can someone interact with this slice and see it working? If the answer is "well, not directly, but it enables…" — that's a layer, not a slice.
+* "User sees real results from the API."
+* "User searches and sees filtered results."
+* "Admin edits a record and sees the change in history."
 
-## Slicing
+Bad:
 
-1. **V1 is the smallest demo-able increment.** Core data flowing through all layers to produce something visible. It should feel almost embarrassingly minimal.
+* "Set up database schema."
+* "Build API endpoints."
+* "Add audit logging infrastructure."
 
-2. **Each subsequent slice adds one working mechanism.** Not one file, not one layer — one thing the user can see or do that they couldn't before.
+If the demo is "nothing visible yet," it is not a slice. Fold that work into the first slice that proves it.
 
-3. **Max 9 slices.** Few enough to hold in your head at once. If you need more, the shape is too big — go back to shaping and split the problem.
+## Conversation pattern
 
-4. **Order by dependency, not importance.** V2 might be less important than V5, but V5 depends on V2's mechanism being in place.
+Use only the sections that help.
 
-## Output
+### Starting point
 
-Ask where to capture output — append to `shape.md`, create `slices.md`, or put it in a task tracker or wiki — and format the summary to fit.
+Briefly restate the agreed direction and any sequencing assumptions.
 
-If writing to a file, keep it minimal:
+### Slices
 
-```markdown
-## Slices
+List slices as `V1`, `V2`, `V3`, up to `V9`.
 
-| # | Slice | Demo |
-|---|-------|------|
-| V1 | Widget with real data | "Widget shows letters from API" |
-| V2 | Search with live filtering | "Type 'dharma', results filter live" |
-| V3 | Filter state in URL | "Refresh page, filters persist" |
-| V4 | Audit trail for changes | "Edit record, see change in history tab" |
-```
+Each slice should include:
 
-Each slice: a name, a demo statement in quotes. That's it.
+* a short name;
+* what changes from the user's point of view;
+* a demo statement.
 
-If a slice needs more detail to be buildable, add a brief list of what gets built — but resist the urge to write implementation specs. The code is the spec.
+Example:
 
-```markdown
-### V2: Search with live filtering
-- Debounced search input component
-- Server-side search endpoint  
-- Results list re-renders on response
+| Slice | User-visible change           | Demo                                                      |
+| ----- | ----------------------------- | --------------------------------------------------------- |
+| V1    | Widget shows real data        | "Open the page and see live data from the API."           |
+| V2    | Search filters results        | "Type a query and see the result list update."            |
+| V3    | Filter state survives refresh | "Apply filters, refresh, and see the same filtered view." |
 
-**Demo:** "Type 'dharma', results filter live"
-```
+### Build notes
 
-## Red Flags
+Add brief build notes only when useful for clarity.
 
-- **A slice with no demo statement** — if you can't describe what to demo, it's not a slice
-- **"Set up X" as a slice** — setup is a layer. What does the setup *enable* that someone can see?
-- **V1 is too ambitious** — V1 should make you uncomfortable with how little it does. That's correct.
-- **Slices that only touch one layer** — "build all the API endpoints" is horizontal. Each slice should touch whatever layers it needs.
-- **More than 9 slices** — the shape is too big. Reshaping is cheaper than managing a 15-slice plan.
-- **Detailed implementation specs per slice** — you're over-planning. The slice says *what's demo-able*, not *how to build it*. Let the code emerge.
+Keep them mechanism-level, not implementation-spec-level.
+
+Example:
+
+#### V2: Search filters results
+
+Build:
+
+* search input
+* server-backed query
+* result list update
+
+Demo: "Type a query and see the result list update."
+
+### Alignment
+
+End by calling out:
+
+* what V1 proves;
+* what can safely wait;
+* any sequencing risk or open decision.

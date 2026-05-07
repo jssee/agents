@@ -1,153 +1,99 @@
 ---
 name: shaping
-description: Use when scoping work or choosing between approaches before writing code. Separates problems from solutions, evaluates options with binary fit checks, and produces a lightweight shaping doc. Trigger on phrases like "not sure which approach", "should we build X or Y", "what's the scope", "tradeoffs between", "before we start", or whenever multiple viable solutions exist and none is obviously right. Pairs with the `slicing` skill, which plans how to build the selected shape.
+description: Use when working through a fuzzy idea before implementation. Helps the agent and user get aligned on the problem, constraints, tradeoffs, and likely approach. Use for prompts like "not sure which approach", "should we build X or Y", "what's the scope", "tradeoffs", "before we start", or whenever multiple viable directions exist and none is obviously right. Pair with `slicing` after an approach is selected.
 ---
 
 # Shaping
 
-## Overview
+Use this skill to get alignment before building.
 
-Shaping is thinking before building. It answers two questions:
+## Goal
 
-1. **What problems are we solving?** (Requirements)
-2. **What solutions are possible?** (Shapes)
+Help the user move from a fuzzy idea to a shared understanding of:
 
-**Core principle:** Problems and solutions are different things. Name them separately. Evaluate them against each other.
+1. what problem matters;
+2. what constraints shape the work;
+3. which approaches are viable;
+4. what direction seems best.
 
-## When to Use
+Do not default to producing a formal document. Keep the interaction conversational and lightweight unless the user asks for a written artifact.
 
-- Starting a new feature or project
-- Unclear what to build or which approach to take
-- Multiple possible solutions and no clear winner
-- Need to scope work before committing to an approach
+## Operating rules
 
-**Not for:** Work where the problem and solution are both obvious. Just build it.
+- Separate problems from solutions.
+- Ask a few clarification questions only when the answers would materially change the direction.
+- If the request has multiple plausible interpretations, ask before shaping.
+- If enough context exists, state assumptions and proceed.
+- Prefer making progress over stalling for perfect clarity.
+- Do not force multiple approaches; one strong approach is fine.
+- Do not invent weak alternatives just to compare something.
+- If everything feels like a `must`, push for priority.
+- If an approach seems wrong despite fitting the stated needs, name the missing requirement or concern.
 
-## The Conversation
+## Conversation pattern
 
-Shaping is a thinking partnership, not a document-generation exercise:
+Adapt to the situation. Use only the parts that help alignment.
 
-- Propose concrete solution mechanisms, not intentions
-- Challenge shapes that sound good but don't actually address requirements
-- Surface tradeoffs the human hasn't considered
+### Assumptions
 
-**Don't rush to document.** Think first, write when the picture is clear enough to be useful.
+Briefly state what you think the user is trying to achieve, who it serves, key constraints, and likely hidden complexity.
 
-## Clarify First
+### Questions
 
-Before proposing shapes, clear ambiguity in the original request with a brief back-and-forth. Shapes built on unexamined assumptions waste work, and the user usually has context you lack.
+Ask only the 2–5 questions that would most change the direction.
 
-**What to probe:**
-- **Purpose** — what's the underlying problem? What hurts right now?
-- **Success criteria** — how do we know it worked? What's "good enough"?
-- **Constraints** — deadlines, stack, existing systems, team capacity
-- **Hidden assumptions** — things treated as obvious that might not be (scale, audience, who operates it, failure modes)
-- **Scope** — what's explicitly out? v1 vs. later?
+Skip this if you can make reasonable assumptions.
 
-**How to ask:**
-- One question at a time, or a tight batch of 2–3 closely related ones. No walls of questions.
-- Prefer multiple choice — faster for the user than open-ended, and surfaces options they may not have considered
-- Scale to the request: a small ask may need one check; a feature-sized ask may need several rounds
-- If the request spans multiple independent subsystems, flag that first — decompose before clarifying details
+### Requirements
 
-**When to skip:** Truly unambiguous requests where the shapes are already obvious. Bias toward asking — under-asking costs more than one extra exchange. But don't fire questions to look thorough; each one should close a specific ambiguity that would change a requirement or a shape.
+Capture the important needs as `R0`, `R1`, `R2`, up to 9 total.
 
-## Requirements (R)
+Each requirement should include a status:
 
-Requirements describe **what's needed**, not what satisfies it.
+- `core`: central to the goal
+- `must`: required for this version
+- `nice`: useful but not required
+- `out`: explicitly not in scope
 
-- Numbered: `R0, R1, R2…` — max 9 top-level (few enough to hold in your head at once; if you need more, you're solving multiple problems)
-- Each has a status: `core | must | nice | out`
-- A requirement states a problem or constraint, never a solution
-- If a requirement sounds like a solution, there's a hidden problem underneath — find it
+Requirements describe the problem or constraint, not the solution.
 
-| ✅ Requirement | ❌ Not a requirement |
-|---|---|
-| "Users need to find items quickly" | "Add a search bar" |
-| "State must survive page refresh" | "Use localStorage" |
-| "Admins need to see who changed what" | "Add an audit log table" |
+Good: “Users need to find items quickly.”
 
-**Negotiate status.** Not everything is `must`. Ask: "What happens if we don't do this?" If the answer is "it's fine for now," that's `nice` or `out`.
+Bad: “Add a search bar.”
 
-## Shapes (A, B, C)
+### Shapes
 
-Shapes are mutually exclusive solution approaches. Pick one.
+When there are multiple viable directions, label them `A`, `B`, `C`.
 
-- Lettered: `A, B, C…`
-- Each shape is a short list of **mechanisms** — concrete things you build or change
-- Mechanisms describe *what*, not *why* (requirements already cover *why*)
-- If two shapes share most mechanisms, they're not different shapes — they're variants of one shape
+Each shape should describe concrete mechanisms: what would be built or changed.
 
-**Parts must be mechanisms:**
+Rules:
 
-| ✅ Mechanism | ❌ Not a mechanism |
-|---|---|
-| "URL query params store filter state" | "Make it fast" |
-| "Server-side search with debounced input" | "Good search experience" |
-| "Webhook fires on record change" | "Keep systems in sync" |
+- Only include shapes that could realistically win.
+- If two shapes mostly overlap, combine them and call out the decision point.
+- Keep approaches similarly detailed.
+- Mention rejected directions briefly only when useful.
 
-If a shape part restates a requirement in different words, it adds no information. Delete it.
+### Fit check
 
-## Fit Check
+Use a binary fit check when comparing approaches would clarify the decision. The fit check table is the one non-negotiable — it's where thinking becomes visible.
 
-The decision tool. A matrix of Requirements × Shapes.
-
-```markdown
 | Req | Requirement | Status | A | B | C |
 |-----|-------------|--------|---|---|---|
-| R0  | Find items quickly | core | ✅ | ✅ | ✅ |
-| R1  | State survives refresh | must | ✅ | ❌ | ✅ |
-| R2  | Works offline | nice | ❌ | ❌ | ✅ |
-```
+| R0 | Example requirement | core | ✅ | ❌ | ✅ |
 
-**Rules:**
+Rules:
 
-- **Binary only** — ✅ or ❌. Never "partially" or "with some work." It either addresses the requirement or it doesn't.
-- If you don't know whether a shape addresses a requirement, that's ❌. Uncertainty is not a pass.
-- If a shape passes all checks but feels wrong, there's a missing requirement. Articulate it, add it, re-run the check.
-- `nice` and `out` requirements don't disqualify a shape, but they inform the decision.
+- Use only ✅ or ❌.
+- Unknown counts as ❌.
+- `core` and `must` failures usually disqualify an approach.
+- `nice` and `out` inform the decision but do not decide it alone.
 
-## Output
+### Alignment
 
-Ask where to capture output — repo file (e.g., `shape.md`), task tracker, or wiki — and format the summary to fit. `shape.md` is a lightweight working doc, not a specification.
+End by stating the current best direction and what needs agreement next.
 
-If writing `shape.md`, use the template below as a starting point, not a mandate. The fit check table is the one non-negotiable — it's where thinking becomes visible.
-
-```markdown
-# [Project Name] — Shape
-
-## Problem
-2-3 sentences. What hurts, what does good look like.
-
-## Requirements
-| # | Requirement | Status |
-|---|-------------|--------|
-
-## Shapes
-### Shape A: [Name]
-- mechanism 1
-- mechanism 2
-
-### Shape B: [Name]
-- mechanism 1
-- mechanism 2
-
-## Fit Check
-| Req | Requirement | Status | A | B |
-|-----|-------------|--------|---|---|
-
-## Decision
-[Which shape and why. 1-2 sentences.]
-```
-
-Once a shape is selected, if its mechanisms need ordering into increments, hand off to the `slicing` skill.
-
-## Red Flags
-
-- **Requirements that are solutions in disguise** — find the problem underneath
-- **Shapes that are identical except for one detail** — that's one shape with a decision point, not two shapes
-- **"We need all of these"** — if everything is `must`, nothing is prioritized. Push back.
-- **Fit check with all ✅** — either the shapes aren't different enough or requirements aren't specific enough
-- **Giant requirements list** — if you have more than 9, you're solving multiple problems. Split them.
-- **Premature detail** — shaping decides *what* and *which approach*, not *how exactly*. Implementation details belong in slicing.
-- **Jumping to shapes on an ambiguous request** — if you can see two plausible interpretations of what the user wants, ask before shaping. You'll shape the wrong thing otherwise.
+Keep this short:
+- recommended direction;
+- why it fits;
+- what decision or uncertainty remains.

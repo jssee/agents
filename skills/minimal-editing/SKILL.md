@@ -1,152 +1,107 @@
 ---
 name: minimal-editing
-description: "Use whenever modifying existing code, fixing bugs, applying review feedback, or making a requested change in a brown-field codebase. This skill prevents AI over-editing: preserve existing structure, make the smallest correct patch, avoid while-i-am-here refactors, and inspect the diff for unrelated churn. Trigger especially for bug fixes, test failures, small feature changes in existing files, PR comments, and any task where code already exists and the user did not explicitly ask for a refactor."
+description: Use when modifying existing code in a brown-field codebase: bug fixes, failing tests, PR feedback, small behavior changes, or requested edits where existing structure should be preserved. Prevents over-editing by setting a narrow patch boundary, making the smallest correct change, rejecting unrelated cleanup, and reviewing the final diff before responding.
 ---
 
-# Minimal Editing
+# Skill: minimal-editing
 
-## Overview
+## Purpose
 
-Fix the requested problem without rewriting code that was already working.
+Make existing-code changes with the smallest correct patch. A patch can be
+functionally correct and still bad if it rewrites working code, expands scope, or
+adds reviewer burden.
 
-In existing codebases, a correct patch can still be bad if it is larger than necessary. Extra helpers, renamed variables, new validation, broad formatting, and opportunistic cleanup increase review cost and risk. Brown-field work should be small, local, and unsurprising unless the user explicitly asks for a redesign.
+Preserve existing structure, names, formatting, and control flow unless changing
+them is required to satisfy the request.
 
-**Core principle:** preserve working code. Change only what is necessary to satisfy the request.
+## Critical Rules
 
-## Use With Other Skills
+- Must treat brown-field code as intentional until evidence says otherwise.
+- Must understand the requested behavior or failure before editing.
+- Must keep the patch inside the smallest safe boundary.
+- Must prefer local edits to constants, operators, arguments, selectors,
+  conditions, or call sites before rewriting blocks.
+- Must not do unrelated cleanup, broad formatting, helper extraction, renames,
+  style conversion, or speculative validation.
+- Must inspect the final diff hunk by hunk after the last edit.
+- Must remove any hunk that is not required for the request.
+- Must verify with the narrowest relevant check available.
+- Never use passing tests to justify unrelated rewrites.
+- Never hide a larger patch; explain why it is required and how it is bounded.
 
-- For bugs, test failures, or unexpected behavior: use `systematic-debugging` first to find root cause. Minimal editing controls the patch after you understand the failure.
-- For post-change cleanup: use `simplify` only on code you just touched, and only if it preserves behavior.
-- For refactors or deletion-oriented design review: use `reducing-entropy`; do not smuggle refactors into a bug fix.
+## When to Use
 
-## The Brown-Field Contract
+- Fixing a bug in existing code.
+- Addressing failing tests.
+- Applying PR or review feedback.
+- Making a small behavior change in existing files.
+- Editing code where the user did not ask for refactoring, redesign, or cleanup.
 
-When editing existing code, assume the current structure is intentional until evidence says otherwise.
+## When Not to Use
 
-Your job is to:
+- Pure green-field work with no existing code to preserve.
+- Explicit refactors, rewrites, migrations, or modernization tasks.
+- Exploratory design work before an implementation direction is chosen.
 
-1. Understand the requested behavior change.
-2. Identify the smallest code region that must change.
-3. Preserve surrounding structure, names, formatting, and control flow.
-4. Verify the behavior.
-5. Leave optional cleanup as a separate recommendation, not a silent patch.
+If the user explicitly asks for a refactor, still avoid unrelated changes, but do
+not force a bug-fix-sized patch.
 
-## Before Coding
+## Workflow
 
-### 1. Classify the task
+1. Classify the task as brown-field or green-field.
+2. For brown-field work, identify the smallest behavior that must change.
+3. Inspect the owning code and nearby tests before editing.
+4. Define a narrow patch boundary, such as:
+   - one conditional
+   - one call argument
+   - one parser branch plus one regression test
+   - one component prop mapping
+5. Edit inside that boundary.
+6. If the boundary must grow, pause and justify why the smaller patch is unsafe or
+   insufficient.
+7. Prefer adding or updating the narrowest regression test that proves the change.
+8. Run the most relevant available verification after the final edit.
+9. Inspect the final diff hunk by hunk.
+10. Revert optional cleanup, formatting churn, renames, or helper extraction.
+11. Stop when the request is satisfied, verification is complete, and the diff has
+    no unrelated hunks.
 
-Ask: is this green-field or brown-field?
+## Tool/File Handling
 
-- **Green-field:** creating new files/features from scratch. Minimal editing is less relevant.
-- **Brown-field:** changing existing behavior. Minimal editing applies.
+- Prefer precise file edits over broad rewrites.
+- Avoid running formatters that rewrite unrelated code unless the repo requires it.
+- If a formatter or generator changes unrelated code, revert or isolate that churn
+  when feasible.
+- Do not touch unrelated files because they look messy.
+- If unrelated local changes already exist, avoid modifying them and mention the
+  constraint if relevant.
 
-If the task is brown-field, continue.
+## Output Requirements
 
-### 2. Define the patch target
-
-State the smallest intended change before editing:
-
-- What behavior must change?
-- Which file/function likely owns it?
-- What nearby code must remain untouched?
-- What test or check will prove the change worked?
-
-If you cannot answer these, investigate more before patching.
-
-### 3. Set a diff boundary
-
-Decide what you expect the diff to contain. Examples:
-
-- "One conditional in `parseDate`"
-- "The SQL filter in `getActiveUsers` plus one regression test"
-- "The prop mapping in `UserCard`, no styling changes"
-
-This boundary is not bureaucracy. It gives you something to compare against after editing.
-
-## While Coding
-
-Prefer these moves:
-
-- Change constants, operators, arguments, selectors, or conditionals before rewriting blocks.
-- Add the narrowest regression test that captures the bug.
-- Follow the surrounding style even if you personally prefer another style.
-- Keep existing names unless the name is part of the bug.
-- Keep existing function boundaries unless the boundary blocks the requested behavior.
-
-Avoid these unless required by the request or root cause:
-
-- Reformatting whole files.
-- Renaming variables, functions, files, props, or tests.
-- Extracting helpers.
-- Adding broad input validation.
-- Changing public APIs.
-- Replacing loops with different iteration styles.
-- Converting between libraries or framework patterns.
-- "Improving" unrelated error handling.
-- Touching adjacent code because it looks messy.
-
-## When a Larger Patch Is Justified
-
-Sometimes the smallest textual edit is not the smallest safe fix. A larger change may be right when:
-
-- The root cause is an invariant violation, not a typo.
-- A one-line fix would preserve known data loss, security risk, or broken API behavior.
-- Existing structure makes the requested behavior impossible without changing boundaries.
-- The user explicitly asked for cleanup, refactoring, redesign, or modernization.
-
-When this happens, make the tradeoff explicit before or during the patch:
-
-> A one-line fix is possible, but it would keep [risk]. I am making a larger change because [evidence]. I will keep it limited to [boundary].
-
-If the larger change changes public behavior or broad architecture, ask the user before proceeding unless the request already authorizes it.
-
-## After Coding: Diff Review
-
-Before claiming completion, inspect the diff against your boundary.
-
-For each changed hunk, ask:
-
-1. Does this hunk directly serve the request?
-2. Would the fix still work without it?
-3. Did I change behavior that tests may not cover?
-4. Did I increase cognitive complexity with new branches, nesting, helpers, or conversions?
-5. Did I preserve project style?
-
-If a hunk is not required, revert it. If it is useful but optional, remove it and mention it as follow-up.
-
-## Completion Report
-
-Keep the final report small and review-focused:
+Final response must include:
 
 - What changed.
-- Why that is sufficient.
+- Why the patch is sufficient.
 - What verification ran.
-- Any optional follow-up you intentionally did not include.
+- Any skipped or unavailable verification.
+- Any larger-than-expected change and why it was necessary.
 
-Example:
+Keep optional cleanup as a follow-up recommendation, not a silent patch.
 
-> Changed `range(len(items) - 1)` to `range(len(items))` in `summarize`. Added the regression case for a single-item list. Ran `pytest tests/test_summary.py`. I left the surrounding loop structure unchanged to keep the fix reviewable.
+## Failure Handling
 
-## Red Flags
+- If the requested behavior is unclear, ask one narrow question.
+- If the failure cannot be reproduced, document the attempted check and use the
+  next-best evidence.
+- If the smallest safe fix would change public API, data shape, persistence,
+  security behavior, or broad architecture, ask before proceeding unless the user
+  already authorized that scope.
+- If the final diff exceeds the expected boundary, either shrink it or explain the
+  evidence that makes the larger patch necessary.
 
-Stop and shrink the patch if you catch yourself thinking:
+## Examples
 
-- "While I'm here..."
-- "This would be cleaner if I rewrote it."
-- "The tests pass, so the larger diff is fine."
-- "I renamed this for clarity."
-- "I added validation just in case."
-- "I changed formatting because the file was messy."
-- "This helper may be useful later."
-- "I don't fully understand why this works, but the rewrite passes tests."
-
-## Quick Checklist
-
-Before ending the turn:
-
-- [ ] Root cause or requested behavior is understood.
-- [ ] Patch is limited to the smallest necessary region.
-- [ ] No unrelated cleanup, renames, formatting, or helper extraction slipped in.
-- [ ] Diff was inspected after the last edit.
-- [ ] Verification ran after the last edit.
-- [ ] Larger-than-expected changes are justified explicitly.
+- Minimal fix: change `range(len(items) - 1)` to `range(len(items))` when the bug
+  is a skipped final item.
+- Over-edit: rewriting the loop, renaming variables, adding validation, and
+  reformatting the function when the one-line fix was enough.

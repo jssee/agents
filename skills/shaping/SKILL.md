@@ -1,99 +1,79 @@
 ---
 name: shaping
-description: Use when working through a fuzzy idea before implementation. Helps the agent and user get aligned on the problem, constraints, tradeoffs, and likely approach. Use for prompts like "not sure which approach", "should we build X or Y", "what's the scope", "tradeoffs", "before we start", or whenever multiple viable directions exist and none is obviously right. Pair with `slicing` after an approach is selected.
+description: Use when working through a fuzzy idea before implementation. Always asks clarification questions first, then produces a requirements table, one or more viable shapes, a fit-check matrix, and a recommendation. Trigger on "not sure which approach", "should we build X or Y", "what's the scope", "tradeoffs", "before we start", or any request where multiple directions are possible.
 ---
 
-# Shaping
+# Skill: shaping
 
-Use this skill to get alignment before building.
+## Purpose
 
-## Goal
+Turn a fuzzy idea into an aligned direction before implementation.
 
-Help the user move from a fuzzy idea to a shared understanding of:
+This is a two-step interaction: ask clarification questions first, then shape
+after the user answers.
 
-1. what problem matters;
-2. what constraints shape the work;
-3. which approaches are viable;
-4. what direction seems best.
+## Critical Rules
 
-Do not default to producing a formal document. Keep the interaction conversational and lightweight unless the user asks for a written artifact.
+- Must ask 2–5 clarification questions before the first shaping output, even if
+  the request seems clear.
+- Must stop after asking questions; do not produce requirements, shapes, fit
+  check, or recommendation in the same response.
+- Must produce a requirements table after the user answers.
+- Must produce one or more realistic shapes.
+- Must produce a fit-check matrix for every shape.
+- Must end with a recommendation.
+- Must separate requirements from solutions.
+- Never invent weak shapes just to compare alternatives.
+- Never treat unknown fit as positive; unknown is ❌.
+- Only skip the question-first step if higher-priority instructions forbid asking.
 
-## Operating rules
+## When to Use
 
-- Separate problems from solutions.
-- Ask a few clarification questions only when the answers would materially change the direction.
-- If the request has multiple plausible interpretations, ask before shaping.
-- If enough context exists, state assumptions and proceed.
-- Prefer making progress over stalling for perfect clarity.
-- Do not force multiple approaches; one strong approach is fine.
-- Do not invent weak alternatives just to compare something.
-- If everything feels like a `must`, push for priority.
-- If an approach seems wrong despite fitting the stated needs, name the missing requirement or concern.
+- The user has a fuzzy idea and wants help before implementation.
+- Multiple viable directions exist and none is obviously right.
+- The user asks about scope, tradeoffs, approach, requirements, or what to build.
 
-## Conversation pattern
+## When Not to Use
 
-Adapt to the situation. Use only the parts that help alignment.
+- The user already chose an approach and wants implementation steps.
+- The task is a direct bug fix or code edit with clear expected behavior.
+- The user needs execution, not alignment.
 
-### Assumptions
+## Workflow
 
-Briefly state what you think the user is trying to achieve, who it serves, key constraints, and likely hidden complexity.
+1. Clarify first:
+   - Ask 2–5 questions about goals, constraints, priorities, users, success,
+     non-goals, or risk.
+   - If the request seems clear, ask confirmation or priority questions.
+   - Stop and wait for the user's answers.
+2. Extract requirements after the user answers:
+   - Use IDs `R0` through `R8`.
+   - Use statuses: `core`, `must`, `nice`, or `out`.
+   - State problems or constraints, not solutions.
+3. Produce shapes:
+   - Label shapes `A`, `B`, `C` as needed.
+   - Include one shape when only one realistic direction exists.
+   - Describe concrete mechanisms: what would be built, changed, removed, or deferred.
+   - Combine overlapping shapes and name the real decision point.
+4. Run the fit check:
+   - Include one column per shape, even when there is only `A`.
+   - Use only ✅ or ❌; unknown counts as ❌.
+   - Treat `core` and `must` failures as disqualifying unless the tradeoff is explicit.
+5. Recommend the best direction and name any decision that still needs agreement.
 
-### Questions
+## Output Requirements
 
-Ask only the 2–5 questions that would most change the direction.
+First response: ask only clarification questions.
 
-Skip this if you can make reasonable assumptions.
+Shaping response after answers must use these sections, in order:
 
-### Requirements
+1. `## Requirements` with table: `Req | Requirement | Status`.
+2. `## Shapes` with `A`, `B`, `C` headings as needed.
+3. `## Fit Check` with table: `Req | Requirement | Status | A | ...`.
+4. `## Recommendation` with the direction, why it fits, and remaining uncertainty.
 
-Capture the important needs as `R0`, `R1`, `R2`, up to 9 total.
+## Failure Handling
 
-Each requirement should include a status:
-
-- `core`: central to the goal
-- `must`: required for this version
-- `nice`: useful but not required
-- `out`: explicitly not in scope
-
-Requirements describe the problem or constraint, not the solution.
-
-Good: “Users need to find items quickly.”
-
-Bad: “Add a search bar.”
-
-### Shapes
-
-When there are multiple viable directions, label them `A`, `B`, `C`.
-
-Each shape should describe concrete mechanisms: what would be built or changed.
-
-Rules:
-
-- Only include shapes that could realistically win.
-- If two shapes mostly overlap, combine them and call out the decision point.
-- Keep approaches similarly detailed.
-- Mention rejected directions briefly only when useful.
-
-### Fit check
-
-Use a binary fit check when comparing approaches would clarify the decision. The fit check table is the one non-negotiable — it's where thinking becomes visible.
-
-| Req | Requirement | Status | A | B | C |
-|-----|-------------|--------|---|---|---|
-| R0 | Example requirement | core | ✅ | ❌ | ✅ |
-
-Rules:
-
-- Use only ✅ or ❌.
-- Unknown counts as ❌.
-- `core` and `must` failures usually disqualify an approach.
-- `nice` and `out` inform the decision but do not decide it alone.
-
-### Alignment
-
-End by stating the current best direction and what needs agreement next.
-
-Keep this short:
-- recommended direction;
-- why it fits;
-- what decision or uncertainty remains.
+- If the user gives partial answers, proceed with explicit assumptions.
+- If all requirements seem like `must`, ask or state which ones drive the decision.
+- If no shape satisfies a `core` or `must`, recommend revising scope.

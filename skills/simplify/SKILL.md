@@ -1,52 +1,78 @@
 ---
 name: simplify
-description: Use when code has been recently written or modified and needs refinement for clarity, consistency, and maintainability before committing
+description: Use after code was recently written or changed and needs a cleanup pass before committing. Refines only recently touched code for clarity, consistency, and maintainability while preserving behavior. Trigger when code works but feels overly complex, unclear, inconsistent, or ready for a final readability pass.
 ---
 
-# Simplify
+# Skill: simplify
 
-## Overview
+## Purpose
 
-Refine recently modified code for clarity, consistency, and maintainability while preserving exact functionality. Prefer readable, explicit code over compact solutions.
+Refine recently changed code for clarity and maintainability before committing.
+
+Simplification is behavior-preserving. The goal is code that is easier to read,
+review, and debug without changing what it does.
+
+## Critical Rules
+
+- Must preserve exact behavior unless the user explicitly asks for a behavior change.
+- Must touch only recently modified code unless the user explicitly expands scope.
+- Must follow nearby code style and repo instructions when present.
+- Must prefer readable, explicit code over clever or compact code.
+- Must reduce complexity only when the result is easier to understand.
+- Must keep useful abstractions; do not inline or merge code just to reduce lines.
+- Must inspect the final diff for behavior changes, scope creep, and churn.
+- Never rewrite untouched working code as part of a cleanup pass.
+- Never use simplification to smuggle in refactors, new features, or bug fixes.
+- Never treat fewer lines as proof that code is simpler.
 
 ## When to Use
 
-- After writing or modifying code, before committing
-- When code works but feels overly complex or unclear
-- When you notice inconsistency with project patterns
-- After a feature is complete and needs a cleanup pass
+- After writing or modifying code, before committing.
+- When changed code works but feels overly complex or unclear.
+- When changed code does not match nearby project patterns.
+- When a finished feature needs a small readability cleanup pass.
 
-**Not for:** Rewriting code that wasn't recently touched (unless explicitly asked).
+## When Not to Use
 
-## Core Principles
+- Broad refactors of code that was not recently touched.
+- Bug fixes where the root cause is not understood.
+- Performance optimization, API redesign, or architecture cleanup.
+- Pure formatting changes unless the repo requires them.
 
-1. **Preserve functionality** — Never change what code does, only how it's expressed
-2. **Follow project standards** — Apply patterns from CLAUDE.md and existing codebase conventions
-3. **Reduce complexity** — Flatten nesting, eliminate redundancy, consolidate related logic
-4. **Clarity over brevity** — Explicit code beats clever one-liners; avoid nested ternaries
-5. **Don't over-simplify** — Keep helpful abstractions; don't combine too many concerns
+## Workflow
 
-## Process
+1. Identify the recently changed code that is in scope.
+2. Check surrounding code and repo instructions for naming, formatting, and structure.
+3. Look for local complexity that can be removed without changing behavior:
+   - nested conditionals
+   - duplicated logic
+   - unclear names
+   - obvious comments
+   - unnecessary one-off abstractions
+   - clever expressions that hide intent
+4. Apply only refinements that improve readability or consistency.
+5. Keep existing behavior, public APIs, data shapes, and side effects unchanged.
+6. Run the narrowest relevant verification after the final edit.
+7. Inspect the final diff and revert any unrelated cleanup, formatting churn, or
+   behavior change.
 
-1. Identify recently modified code sections
-2. Check CLAUDE.md and surrounding code for project conventions
-3. Apply refinements that improve clarity without changing behavior
-4. Verify: Is the result simpler AND more maintainable?
+## Output Requirements
 
-## Common Refinements
+Final response must include:
 
-| Pattern | Refinement |
-|---------|-----------|
-| Nested ternaries | Switch statement or if/else chain |
-| Redundant abstractions | Inline if used once |
-| Deep nesting | Early returns, guard clauses |
-| Unclear names | Rename to describe purpose, not implementation |
-| Obvious comments | Remove — let code speak |
-| Duplicated logic | Consolidate, but only if truly duplicated |
+- What was simplified.
+- Why behavior is preserved.
+- What verification ran.
+- Any skipped verification or intentional non-changes.
 
-## Common Mistakes
+## Failure Handling
 
-- **Changing behavior** while "simplifying" — always preserve exact functionality
-- **Over-compacting** — fewer lines ≠ simpler; readability is the goal
-- **Scope creep** — only touch recently modified code unless told otherwise
-- **Removing useful abstractions** — some indirection exists for good reason
+- If behavior would need to change, stop and ask or switch to the appropriate task.
+- If simplification would require touching untouched code, ask before expanding scope.
+- If the result is shorter but less obvious, keep the original clearer version.
+- If no meaningful simplification exists, say so and leave the code unchanged.
+
+## Examples
+
+- Good: replace a nested ternary in recently changed code with a clear `if` block.
+- Bad: rename unrelated functions across the module during a pre-commit cleanup.

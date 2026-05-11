@@ -1,81 +1,89 @@
 ---
 name: reducing-entropy
-description: Use when evaluating designs, reviewing code, or refactoring - measures success by total code in the final codebase, not effort to get there. Bias toward deletion.
+description: Use when evaluating designs, reviewing code, or refactoring with a bias toward a smaller final codebase. Measures success by total code and concepts after the change, not by how easy the patch is. Trigger when deciding what to delete, whether a refactor is worth it, or whether a proposed design adds unnecessary complexity.
 ---
 
-# Reducing Entropy
+# Skill: reducing-entropy
 
-More code begets more code. Entropy accumulates. This skill biases toward the smallest possible codebase.
+## Purpose
 
-**Core question:** "What does the codebase look like *after*?"
+Reduce the total code and concepts the codebase must carry after the change.
 
-## Before You Begin
+The core question is: what does the codebase look like after? Success is a
+smaller, simpler end state, not the smallest patch or the easiest implementation.
 
-**Load at least one mindset from `references/`**
+## Critical Rules
 
-1. List the files in the reference directory
-2. Read frontmatter descriptions to pick which applies
-3. Load at least one
-4. State which you loaded and its core principle
+- Must bias toward deletion and fewer concepts.
+- Must measure the final codebase, not the effort to get there.
+- Must ask what can be removed, merged, avoided, or made obsolete.
+- Must challenge net code increases; proceed only when added code is required.
+- Must prefer simple over familiar when the familiar path adds moving parts.
+- Must load one `references/*.md` mindset before analysis when available.
+- Must state which mindset was loaded and its core principle.
+- Never keep code only because it already exists.
+- Never add flexibility without a concrete expected use.
+- Never treat more layers, abstractions, files, or types as automatically cleaner.
 
-**Do not proceed until you've done this.**
+## When to Use
 
-## The Goal
+- Evaluating a proposed design or refactor.
+- Reviewing code for unnecessary complexity.
+- Choosing between keeping, replacing, simplifying, or deleting code.
+- Deciding whether new abstraction, configuration, indirection, or type structure
+  is worth its cost.
 
-The goal is **less total code in the final codebase** - not less code to write right now.
+## When Not to Use
 
-- Writing 50 lines that delete 200 lines = net win
-- Keeping 14 functions to avoid writing 2 = net loss
-- "No churn" is not a goal. Less code is the goal.
+- A direct bug fix where the safest change is a small local patch.
+- Code that is already minimal for what it does.
+- Framework, regulatory, compatibility, or team constraints require the structure.
+- The user explicitly wants additive exploration rather than simplification.
 
-**Measure the end state, not the effort.**
+## Workflow
 
-## Three Questions
+1. Load one mindset from `references/*.md` if available; if not, say so and proceed.
+2. State the loaded mindset and core principle in one sentence.
+3. Describe the current or proposed end state.
+4. Identify what the change adds:
+   - files
+   - functions
+   - concepts
+   - dependencies
+   - configuration
+   - states or branches
+5. Identify what can be deleted, merged, avoided, or made obsolete.
+6. Compare end states by total code and total concepts, not patch size.
+7. Recommend the smallest final codebase that satisfies the real constraints.
+8. Name any case where extra code is justified because it is expensive to add later
+   or required by an explicit constraint.
 
-### 1. What's the smallest codebase that solves this?
+## Tool/File Handling
 
-Not "what's the smallest change" - what's the smallest *result*.
+- Use `references/` for mindset selection only; do not turn it into a long research
+  pass unless the user asks.
+- If reference files are unavailable, continue with the critical rules and note the
+  missing reference.
+- Do not create new reference files during ordinary entropy review.
 
-- Could this be 2 functions instead of 14?
-- Could this be 0 functions (delete the feature)?
-- What would we delete if we did this?
+## Output Requirements
 
-### 2. Does the proposed change result in less total code?
+Final response must include:
 
-Count lines before and after. If after > before, reject it.
+- Loaded mindset.
+- Smallest viable end state.
+- What to delete, merge, avoid, or make obsolete.
+- Any justified additions and why they are required.
+- Recommendation.
 
-- "Better organized" but more code = more entropy
-- "More flexible" but more code = more entropy
-- "Cleaner separation" but more code = more entropy
+## Failure Handling
 
-### 3. What can we delete?
+- If constraints require more code, state the constraint and the smallest compliant
+  version.
+- If deletion would break required behavior, recommend the smallest safe reduction.
+- If the tradeoff is uncertain, name the evidence needed to decide.
 
-Every change is an opportunity to delete. Ask:
+## Examples
 
-- What does this make obsolete?
-- What was only needed because of what we're replacing?
-- What's the maximum we could remove?
-
-## Red Flags
-
-- **"Keep what exists"** - Status quo bias. The question is total code, not churn.
-- **"This adds flexibility"** - Flexibility for what? YAGNI.
-- **"Better separation of concerns"** - More files/functions = more code. Separation isn't free.
-- **"Type safety"** - Worth how many lines? Sometimes runtime checks in less code wins.
-- **"Easier to understand"** - 14 things are not easier than 2 things.
-
-## When This Doesn't Apply
-
-- The codebase is already minimal for what it does
-- You're in a framework with strong conventions (don't fight it)
-- Regulatory/compliance requirements mandate certain structures
-
-## Reference Mindsets
-
-See `references/` for philosophical grounding.
-
-To add new mindsets, see `adding-reference-mindsets.md`.
-
----
-
-**Bias toward deletion. Measure the end state.**
+- Good: write 20 lines that remove 200 lines and one concept.
+- Bad: keep 14 functions to avoid writing 2 clearer ones.

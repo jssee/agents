@@ -38,6 +38,7 @@ Do not use it for ordinary prose, code, documentation, or prompts that are not m
 2. Draft the required sections first.
    - Start with `Goal`, `Required Behavior`, and `Procedure`.
    - Make the procedure numbered, ordered, and action-oriented.
+   - Reference the template in `references/template.md` to ensure consistent structure.
 
 3. Add optional sections only when they clarify execution.
    - Use `When to Use` or `When Not to Use` for boundaries.
@@ -50,85 +51,24 @@ Do not use it for ordinary prose, code, documentation, or prompts that are not m
    - Remove duplicate rules, rationale, commentary, and hidden assumptions.
    - Move long examples, command catalogs, troubleshooting, and background to reference files.
    - Check that required behavior appears in rules, not only in examples.
-
-## Template
-
-```md
----
-name: <skill-name>
-description: <trigger-focused sentence describing when to use this skill>
----
-
-# <skill-name>
-
-## Goal
-Required. State the outcome the skill should reliably produce in 1-3 sentences.
-
-## Required Behavior
-Required. List mandatory behavior, constraints, and decision rules.
-
-## Procedure
-Required. Provide the ordered main path the agent should follow.
-
-## When to Use
-Optional. Include when triggers or neighboring-skill boundaries need clarification.
-
-## When Not to Use
-Optional. Include when exclusions or common misuses need clarification.
+   - Use the checklist in `references/review-checklist.md` to verify the skill is complete.
 
 ## Tool/File Handling
-Optional. Include only when tools, files, references, or fallback behavior matter.
+
+Read `references/template.md` to see the standard skill structure and section descriptions. Use it as a starting point for every new skill.
+
+Read `references/review-checklist.md` before finalizing a skill. It covers YAML structure, length, reference files, procedure clarity, and other execution requirements.
 
 ## Output Requirements
-Optional. Include only when final format, paths, citations, verification notes, or summaries matter.
+
+Final response must include:
+
+- The new or revised `SKILL.md`.
+- Any required reference files for examples, mindsets, checklists, templates, or background.
+- A summary of structure and length.
 
 ## Failure Handling
-Optional. Include only when missing inputs, failed tools, ambiguity, or blocked work are likely.
 
-## Examples
-Optional. Keep minimal. Do not place mandatory behavior only in examples.
-```
-
-## Length and References
-
-- Target `SKILL.md` length: 75-150 lines.
-- Prefer 75-120 lines for simple skills.
-- Review carefully when over 150 lines.
-- Avoid exceeding 200 lines unless the skill genuinely needs the extra structure.
-- The first 20-40 lines must contain the operational core.
-
-Move material to reference files when it is useful but not needed for the main path:
-
-- long examples or transcripts,
-- detailed troubleshooting trees,
-- command catalogs,
-- background, rationale, or design philosophy,
-- large tables or compatibility matrices,
-- rare edge cases,
-- tool-specific details that only apply conditionally.
-
-Reference files should be named explicitly and read only when relevant.
-
-Prefer:
-
-```md
-Read `references/troubleshooting.md` only if the main procedure fails or the error matches a known failure pattern.
-```
-
-## Review Checklist
-
-- [ ] YAML front matter includes `name` and `description`.
-- [ ] `name` matches the skill directory name.
-- [ ] `description` is trigger-focused.
-- [ ] Required sections are present: `Goal`, `Required Behavior`, and `Procedure`.
-- [ ] `SKILL.md` is within 75-150 lines, or extra length is justified by execution needs.
-- [ ] Reference files are used for long examples, rare edge cases, background, or conditional details.
-- [ ] Reference files are named explicitly and read only when relevant.
-- [ ] First 20-40 lines contain the operational core.
-- [ ] Mandatory and optional guidance are distinguishable.
-- [ ] Procedure is numbered, ordered, and executable.
-- [ ] Tool/file assumptions and fallbacks are clear when relevant.
-- [ ] Output requirements are explicit when format or verification matters.
-- [ ] Failure handling is explicit when blocked states are likely.
-- [ ] Examples are short and do not contain hidden requirements.
-- [ ] Repeated rules and long rationale are removed.
+- If the skill boundary is unclear, ask clarification questions before drafting.
+- If the skill exceeds 200 lines, identify what can move to reference files.
+- If required sections are missing, add them before considering the skill complete.

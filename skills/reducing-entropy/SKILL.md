@@ -3,16 +3,16 @@ name: reducing-entropy
 description: Use when evaluating designs, reviewing code, or refactoring with a bias toward a smaller final codebase. Measures success by total code and concepts after the change, not by how easy the patch is. Trigger when deciding what to delete, whether a refactor is worth it, or whether a proposed design adds unnecessary complexity.
 ---
 
-# Skill: reducing-entropy
+# reducing-entropy
 
-## Purpose
+## Goal
 
 Reduce the total code and concepts the codebase must carry after the change.
 
 The core question is: what does the codebase look like after? Success is a
 smaller, simpler end state, not the smallest patch or the easiest implementation.
 
-## Critical Rules
+## Required Behavior
 
 - Must bias toward deletion and fewer concepts.
 - Must measure the final codebase, not the effort to get there.
@@ -40,7 +40,7 @@ smaller, simpler end state, not the smallest patch or the easiest implementation
 - Framework, regulatory, compatibility, or team constraints require the structure.
 - The user explicitly wants additive exploration rather than simplification.
 
-## Workflow
+## Procedure
 
 1. Load one mindset from `references/*.md` if available; if not, say so and proceed.
 2. State the loaded mindset and core principle in one sentence.

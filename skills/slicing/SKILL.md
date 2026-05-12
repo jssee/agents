@@ -3,9 +3,9 @@ name: slicing
 description: Use when a chosen approach or clear build target needs to become ordered, demo-able slices. Natural follow-up to `shaping`, but also works from any clear description of what to build. Trigger on "break this down", "what's V1", "plan the rollout", "MVP then iterate", "ship incrementally", or work with multiple pieces that need sequencing.
 ---
 
-# Skill: slicing
+# slicing
 
-## Purpose
+## Goal
 
 Turn a chosen approach or clear build target into small, ordered, demo-able
 slices.
@@ -13,7 +13,7 @@ slices.
 This is typically run after `shaping`, but shaping output is not required. A
 valid slice lets someone see, do, or verify something after it ships.
 
-## Critical Rules
+## Required Behavior
 
 - Must center output on demo-able vertical slices.
 - Must start from shaping output when available; otherwise use a clear build target.
@@ -42,7 +42,7 @@ valid slice lets someone see, do, or verify something after it ships.
 - The task is a direct code edit with clear expected behavior.
 - The user wants implementation tasks rather than demo-able increments.
 
-## Workflow
+## Procedure
 
 1. Establish the starting point from the selected shape, agreed direction, or
    clear build target.

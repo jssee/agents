@@ -3,16 +3,16 @@ name: simplify
 description: Use after code was recently written or changed and needs a cleanup pass before committing. Refines only recently touched code for clarity, consistency, and maintainability while preserving behavior. Trigger when code works but feels overly complex, unclear, inconsistent, or ready for a final readability pass.
 ---
 
-# Skill: simplify
+# simplify
 
-## Purpose
+## Goal
 
 Refine recently changed code for clarity and maintainability before committing.
 
 Simplification is behavior-preserving. The goal is code that is easier to read,
 review, and debug without changing what it does.
 
-## Critical Rules
+## Required Behavior
 
 - Must preserve exact behavior unless the user explicitly asks for a behavior change.
 - Must touch only recently modified code unless the user explicitly expands scope.
@@ -39,7 +39,7 @@ review, and debug without changing what it does.
 - Performance optimization, API redesign, or architecture cleanup.
 - Pure formatting changes unless the repo requires them.
 
-## Workflow
+## Procedure
 
 1. Identify the recently changed code that is in scope.
 2. Check surrounding code and repo instructions for naming, formatting, and structure.

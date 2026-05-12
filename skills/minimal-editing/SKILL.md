@@ -3,9 +3,9 @@ name: minimal-editing
 description: Use when modifying existing code in a brown-field codebase: bug fixes, failing tests, PR feedback, small behavior changes, or requested edits where existing structure should be preserved. Prevents over-editing by setting a narrow patch boundary, making the smallest correct change, rejecting unrelated cleanup, and reviewing the final diff before responding.
 ---
 
-# Skill: minimal-editing
+# minimal-editing
 
-## Purpose
+## Goal
 
 Make existing-code changes with the smallest correct patch. A patch can be
 functionally correct and still bad if it rewrites working code, expands scope, or
@@ -14,7 +14,7 @@ adds reviewer burden.
 Preserve existing structure, names, formatting, and control flow unless changing
 them is required to satisfy the request.
 
-## Critical Rules
+## Required Behavior
 
 - Must treat brown-field code as intentional until evidence says otherwise.
 - Must understand the requested behavior or failure before editing.
@@ -46,7 +46,7 @@ them is required to satisfy the request.
 If the user explicitly asks for a refactor, still avoid unrelated changes, but do
 not force a bug-fix-sized patch.
 
-## Workflow
+## Procedure
 
 1. Classify the task as brown-field or green-field.
 2. For brown-field work, identify the smallest behavior that must change.

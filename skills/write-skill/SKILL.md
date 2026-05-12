@@ -113,6 +113,7 @@ Prefer:
 
 ```md
 Read `references/troubleshooting.md` only if the main procedure fails or the error matches a known failure pattern.
+```
 
 ## Review Checklist
 

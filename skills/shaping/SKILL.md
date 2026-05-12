@@ -3,16 +3,16 @@ name: shaping
 description: Use when working through a fuzzy idea before implementation. Always asks clarification questions first, then produces a requirements table, one or more viable shapes, a fit-check matrix, and a recommendation. Trigger on "not sure which approach", "should we build X or Y", "what's the scope", "tradeoffs", "before we start", or any request where multiple directions are possible.
 ---
 
-# Skill: shaping
+# shaping
 
-## Purpose
+## Goal
 
 Turn a fuzzy idea into an aligned direction before implementation.
 
 This is a two-step interaction: ask clarification questions first, then shape
 after the user answers.
 
-## Critical Rules
+## Required Behavior
 
 - Must ask 2–5 clarification questions before the first shaping output, even if
   the request seems clear.
@@ -39,7 +39,7 @@ after the user answers.
 - The task is a direct bug fix or code edit with clear expected behavior.
 - The user needs execution, not alignment.
 
-## Workflow
+## Procedure
 
 1. Clarify first:
    - Ask 2–5 questions about goals, constraints, priorities, users, success,

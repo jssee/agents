@@ -3,14 +3,14 @@ name: commit
 description: Use when committing local changes while preserving clean, reviewable git history.
 ---
 
-# Skill: commit
+# commit
 
-## Purpose
+## Goal
 
 Preserve pristine, reviewable git history. Commit only related work. Use fixup
 commits when the change repairs, refactors, or completes earlier work on this branch.
 
-## Critical Rules
+## Required Behavior
 
 - Never use `git add .` or `git add -A`.
 - Stage explicit files only; never use interactive staging such as `git add -p`.
@@ -24,7 +24,7 @@ commits when the change repairs, refactors, or completes earlier work on this br
 - Match existing style for normal commits; never add AI attribution.
 - Do not commit known-broken work unless the user approves.
 
-## Workflow
+## Procedure
 
 1. Inspect state:
    - `git branch --show-current`

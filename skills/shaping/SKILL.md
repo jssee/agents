@@ -1,79 +1,70 @@
 ---
 name: shaping
-description: Use when working through a fuzzy idea before implementation. Always asks clarification questions first, then produces a requirements table, one or more viable shapes, a fit-check matrix, and a recommendation. Trigger on "not sure which approach", "should we build X or Y", "what's the scope", "tradeoffs", "before we start", or any request where multiple directions are possible.
+description: Compact decision brief for loose ideas before implementation.
+disable-model-invocation: true
 ---
 
 # shaping
 
 ## Goal
 
-Turn a fuzzy idea into an aligned direction before implementation.
+Turn a loose idea into a compact decision brief before implementation.
 
-This is a two-step interaction: ask clarification questions first, then shape
-after the user answers.
+## Protocol
 
-## Required Behavior
+1. Clarify first.
+   - Ask 2–4 questions only, then stop.
+   - Ask only questions whose answers could change the shape.
+   - Cover goals, constraints, users, success, non-goals, risks, or decision drivers.
+   - Complete when the user has answered or given enough to proceed with assumptions.
 
-- Must ask 2–5 clarification questions before the first shaping output, even if
-  the request seems clear.
-- Must stop after asking questions; do not produce requirements, shapes, fit
-  check, or recommendation in the same response.
-- Must produce a requirements table after the user answers.
-- Must produce one or more realistic shapes.
-- Must produce a fit-check matrix for every shape.
-- Must end with a recommendation.
-- Must separate requirements from solutions.
-- Never invent weak shapes just to compare alternatives.
-- Never treat unknown fit as positive; unknown is ❌.
-- Only skip the question-first step if higher-priority instructions forbid asking.
-
-## When to Use
-
-- The user has a fuzzy idea and wants help before implementation.
-- Multiple viable directions exist and none is obviously right.
-- The user asks about scope, tradeoffs, approach, requirements, or what to build.
-
-## When Not to Use
-
-- The user already chose an approach and wants implementation steps.
-- The task is a direct bug fix or code edit with clear expected behavior.
-- The user needs execution, not alignment.
-
-## Procedure
-
-1. Clarify first:
-   - Ask 2–5 questions about goals, constraints, priorities, users, success,
-     non-goals, or risk.
-   - If the request seems clear, ask confirmation or priority questions.
-   - Stop and wait for the user's answers.
-2. Extract requirements after the user answers:
+2. Extract requirements.
    - Use IDs `R0` through `R8`.
    - Use statuses: `core`, `must`, `nice`, or `out`.
-   - State problems or constraints, not solutions.
-3. Produce shapes:
-   - Label shapes `A`, `B`, `C` as needed.
-   - Include one shape when only one realistic direction exists.
-   - Describe concrete mechanisms: what would be built, changed, removed, or deferred.
-   - Combine overlapping shapes and name the real decision point.
-4. Run the fit check:
-   - Include one column per shape, even when there is only `A`.
-   - Use only ✅ or ❌; unknown counts as ❌.
-   - Treat `core` and `must` failures as disqualifying unless the tradeoff is explicit.
-5. Recommend the best direction and name any decision that still needs agreement.
+   - State problems, constraints, and outcomes — not solutions.
+   - Complete when every decision-driving requirement is captured.
 
-## Output Requirements
 
-First response: ask only clarification questions.
+3. Shape options.
+   - Prefer 1–3 realistic shapes; one shape is valid.
+   - Label shapes `A`, `B`, `C`.
+   - Describe direction, deferred work, and main tradeoff.
+   - Combine overlaps; name the real decision point.
+   - Complete when each shape is distinct and no shape is weak or fake.
 
-Shaping response after answers must use these sections, in order:
+4. Fit check.
+   - Include one column per shape.
+   - Use only `●` or `○` (`●` = hit, `○` = miss).
+   - Treat unknown as `○`.
+   - Treat failed `core` or `must` requirements as disqualifying unless named as an explicit tradeoff.
+   - Complete when every requirement is scored for every shape.
 
-1. `## Requirements` with table: `Req | Requirement | Status`.
-2. `## Shapes` with `A`, `B`, `C` headings as needed.
-3. `## Fit Check` with table: `Req | Requirement | Status | A | ...`.
-4. `## Recommendation` with the direction, why it fits, and remaining uncertainty.
+5. Recommend.
+   - Recommend a best default, not a forced choice.
+   - Name any viable alternative and remaining uncertainty.
+   - Do not produce an implementation plan unless asked.
+   - Complete with a direction or a stated need to revise scope.
 
-## Failure Handling
+## Decision Brief
 
-- If the user gives partial answers, proceed with explicit assumptions.
-- If all requirements seem like `must`, ask or state which ones drive the decision.
-- If no shape satisfies a `core` or `must`, recommend revising scope.
+After the user answers, use these sections in order. Keep bullets terse; avoid explanatory paragraphs.
+
+1. `## Requirements`
+
+   Table: `Req | Requirement | Status`
+
+2. `## Shapes`
+
+   Headings: `### A — Name`, `### B — Name`, etc.
+
+3. `## Fit Check`
+
+   Table: `Req | Requirement | Status | A | ...`
+
+4. `## Recommendation`
+
+   State the best default, why it fits, any viable alternative, and what remains uncertain.
+
+5. Optional: `## Explore Next`
+
+   Use only when 1–2 viable shapes deserve separate exploration; name each exploration and what it would prove, not how to implement it.

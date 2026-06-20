@@ -1,9 +1,9 @@
 ---
-name: surgical-editing
-description: Surgical editing. Use when modifying existing code where a small local patch should satisfy the request.
+name: minimal-editing
+description: Minimal editing. Use when modifying existing code where a small local patch should satisfy the request.
 ---
 
-# surgical-editing
+# minimal-editing
 
 ## Intent
 
@@ -33,8 +33,8 @@ Produce surgical patches: the smallest behavior-correct change inside the user's
 
 ## Rules
 
-- Surgical means every hunk has a narrow reason, not that the whole feature is tiny.
-- Surgical means fewer concepts, not fewer lines. Clarity beats compression.
+- Minimal means every hunk has a narrow reason, not that the whole feature is tiny.
+- Minimal means fewer concepts, not fewer lines. Clarity beats compression.
 - Parse once at trust boundaries; do not validate already-typed internals.
 - Armor belongs only at trust boundaries or required recovery paths.
 - Preserve existing behavior except for the requested change.

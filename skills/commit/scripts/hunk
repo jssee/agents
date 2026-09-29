@@ -1,0 +1,238 @@
+#!/bin/sh
+# hunk: stage and unstage individual hunks or lines with plain git.
+# A non-interactive stand-in for `git add -p` that needs only POSIX sh, awk, and git.
+set -eu
+
+usage() {
+	cat <<'EOF'
+Usage:
+  hunk list [--staged] [path...]
+  hunk stage [--dry-run] <id>[:<lines>]...
+  hunk unstage [--dry-run] <id>[:<lines>]...
+
+list       Show unstaged hunks (staged with --staged), each with an id and
+           numbered body lines. Paths that only move whole (untracked, new,
+           deleted, binary, mode, submodule, conflict) are listed separately;
+           use git add, git rm, or git restore --staged for those.
+stage      Stage hunks from `hunk list`.
+unstage    Unstage hunks from `hunk list --staged`.
+
+<lines>    Body line numbers to take from the hunk, e.g. 3f9a1c2e:4-7,9.
+           Omit to take the whole hunk.
+--dry-run  Check that the patch applies and print it; the index is untouched.
+
+Ids hash a hunk's path and content: they survive staging other hunks and go
+stale when the hunk itself changes.
+
+Exit: 0 ok, 1 usage or bad selection, 2 unknown or stale id (rerun list),
+      3 patch rejected by git apply (index unchanged).
+EOF
+}
+
+die() {
+	code=$1
+	shift
+	printf 'hunk: %s\n' "$*" >&2
+	exit "$code"
+}
+
+# Pin every setting that shapes the patch text, so user config (external diff
+# tools, noprefix, color, context width) cannot produce a patch git apply rejects.
+diff_() {
+	git --no-pager -c core.quotePath=false diff \
+		--no-ext-diff --no-color --no-textconv --no-renames --submodule=short \
+		-U3 --inter-hunk-context=0 --src-prefix=a/ --dst-prefix=b/ "$@"
+}
+
+# Split a diff into $tmp: f.N (file header), h.N.M (hunk M of file N), and
+# a manifest of "N<TAB>M<TAB>kind<TAB>path" rows. M is 0 for whole-file paths.
+scan() {
+	diff_ "$@" | awk -v dir="$tmp" '
+	function end_file() {
+		if (out != "") close(out)
+		out = ""
+		if (n && !listed) row(0, kind == "text" ? "other" : kind)
+	}
+	function row(m, k) {
+		printf "%d\t%d\t%s\t%s\n", n, m, k, path > man
+		listed = 1
+	}
+	BEGIN { man = dir "/manifest"; printf "" > man }
+	/^diff --/ {
+		end_file()
+		n++; m = 0; listed = 0; kind = "text"; out = dir "/f." n
+		if ($0 ~ /^diff --git "/) {
+			rest = substr($0, 12); path = substr(rest, 4, (length(rest) - 1) / 2 - 4)
+		} else if ($0 ~ /^diff --git /) {
+			rest = substr($0, 12); path = substr(rest, 3, (length(rest) - 5) / 2)
+		} else {
+			kind = "conflict"; path = $0; sub(/^diff --(cc|combined) /, "", path)
+		}
+		print > out
+		next
+	}
+	m == 0 && kind != "conflict" {
+		if ($0 ~ /^index .* 160000$/ || $0 ~ /^(new file|deleted file|old|new) mode 160000/) kind = "submodule"
+		else if (kind == "text") {
+			if ($0 ~ /^new file mode/) kind = "new"
+			else if ($0 ~ /^deleted file mode/) kind = "deleted"
+			else if ($0 ~ /^old mode/) kind = "mode"
+			else if ($0 ~ /^(Binary files |GIT binary patch)/) kind = "binary"
+		}
+	}
+	/^@@ / && kind != "conflict" {
+		close(out); m++; out = dir "/h." n "." m
+		if (kind == "text") row(m, "hunk")
+		else if (!listed) row(0, kind)
+	}
+	{ if (out != "") print > out }
+	END { end_file(); close(man) }
+	'
+	# Id each hunk by hashing its path and body (not its line numbers).
+	awk -F'\t' '$2 != 0' "$tmp/manifest" > "$tmp/hunks"
+	while IFS='	' read -r n m kind path; do
+		{ printf '%s\n' "$path"; sed 1d "$tmp/h.$n.$m"; } > "$tmp/k.$n.$m"
+		printf '%s\n' "$tmp/k.$n.$m"
+	done < "$tmp/hunks" | git hash-object --no-filters --stdin-paths > "$tmp/hashes"
+	paste "$tmp/hashes" "$tmp/hunks" | awk -F'\t' -v OFS='\t' '{
+		id = substr($1, 1, 8)
+		if (seen[id]++) id = id "." seen[id]
+		print id, $2, $3, $5
+	}' > "$tmp/table"
+}
+
+list() {
+	staged=
+	if [ "${1:-}" = --staged ]; then staged=--cached; shift; fi
+	scan $staged -- "$@"
+	while IFS='	' read -r id n m path; do
+		printf '%s  %s  %s\n' "$id" "$path" "$(head -n 1 "$tmp/h.$n.$m")"
+		sed 1d "$tmp/h.$n.$m" | awk '{ printf "%4d %s\n", NR, $0 }'
+		echo
+	done < "$tmp/table"
+	{
+		awk -F'\t' -v OFS='\t' '$2 == 0 { print $3, $4 }' "$tmp/manifest"
+		[ -n "$staged" ] || git ls-files --others --exclude-standard -- "$@" | sed 's/^/untracked	/'
+	} > "$tmp/whole"
+	if [ -s "$tmp/whole" ]; then
+		echo 'whole files (git add, git rm, git restore --staged):'
+		awk -F'\t' '{ printf "  %-10s %s\n", $1, $2 }' "$tmp/whole"
+	fi
+	[ -s "$tmp/table" ] || [ -s "$tmp/whole" ] || echo "no ${staged:+staged }changes" >&2
+}
+
+# Keep the selected change lines of one hunk. An unselected line on the side
+# being applied is dropped; one on the other side becomes context.
+pick() {
+	awk -v id="$1" -v spec="$2" -v add="$3" '
+	function bad(msg) { print "hunk: " id ":" spec " " msg | "cat 1>&2"; failed = 1; exit 1 }
+	BEGIN {
+		np = split(spec, parts, ",")
+		for (i = 1; i <= np; i++) {
+			p = parts[i]
+			if (p !~ /^[0-9]+(-[0-9]+)?$/) bad("is not a list of line numbers or ranges")
+			a = p; b = p
+			if (d = index(p, "-")) { a = substr(p, 1, d - 1); b = substr(p, d + 1) }
+			for (j = a + 0; j <= b + 0; j++) want[j] = 1
+			if (b + 0 > max) max = b + 0
+		}
+	}
+	NR == 1 { print; next }
+	{
+		c = substr($0, 1, 1)
+		if (c == "\\") { if (kept) print }
+		else if (c == " ") { print; kept = 1 }
+		else if (want[NR - 1]) { print; kept = 1; changes++ }
+		else if (c == add) kept = 0
+		else { print " " substr($0, 2); kept = 1 }
+	}
+	END {
+		if (failed) exit 1
+		if (max > NR - 1) bad("is past the end of a " NR - 1 "-line hunk")
+		if (!changes) bad("selects no changed lines")
+	}
+	'
+}
+
+apply() {
+	mode=$1
+	shift
+	dry=
+	if [ "${1:-}" = --dry-run ]; then dry=1; shift; fi
+	[ $# -gt 0 ] || die 1 "$mode needs at least one hunk id"
+	opts='--cached --recount --whitespace=nowarn'
+	if [ "$mode" = stage ]; then
+		scan
+		add=+ relist='hunk list'
+	else
+		scan --cached
+		add=- relist='hunk list --staged' opts="$opts --reverse"
+	fi
+
+	# Resolve selectors to "N<TAB>M<TAB>lines", merging repeats of one hunk.
+	: > "$tmp/sel"
+	for sel; do
+		id=${sel%%:*}
+		lines=
+		case $sel in *:*) lines=${sel#*:} ;; esac
+		[ -n "$lines" ] || [ "$sel" = "$id" ] || die 1 "$sel: empty line selection"
+		nm=$(awk -F'\t' -v id="$id" '$1 == id { print $2 "\t" $3 }' "$tmp/table")
+		[ -n "$nm" ] || die 2 "unknown hunk id $id (the hunk changed or never existed); rerun: $relist"
+		printf '%s\t%s\n' "$nm" "$lines" >> "$tmp/sel"
+	done
+	awk -F'\t' -v OFS='\t' '
+		{ k = $1 OFS $2; if (!(k in sel)) order[++n] = k }
+		!(k in sel) { sel[k] = $3; next }
+		sel[k] == "" || $3 == "" { sel[k] = ""; next }
+		{ sel[k] = sel[k] "," $3 }
+		END { for (i = 1; i <= n; i++) print order[i], sel[order[i]] }
+	' "$tmp/sel" | sort -t '	' -k1,1n -k2,2n > "$tmp/picked"
+
+	: > "$tmp/patch"
+	prev=
+	while IFS='	' read -r n m lines; do
+		[ "$n" = "$prev" ] || cat "$tmp/f.$n" >> "$tmp/patch"
+		prev=$n
+		if [ -z "$lines" ]; then
+			cat "$tmp/h.$n.$m" >> "$tmp/patch"
+		else
+			id=$(awk -F'\t' -v n="$n" -v m="$m" '$2 == n && $3 == m { print $1 }' "$tmp/table")
+			pick "$id" "$lines" "$add" < "$tmp/h.$n.$m" >> "$tmp/patch" || exit 1
+		fi
+	done < "$tmp/picked"
+
+	# git apply is all-or-nothing: a rejected patch leaves the index untouched.
+	if [ -n "$dry" ]; then
+		git apply --check $opts "$tmp/patch" || die 3 "git apply rejected the patch; index unchanged"
+		cat "$tmp/patch"
+	else
+		git apply $opts "$tmp/patch" || die 3 "git apply rejected the patch; index unchanged"
+		echo "${mode}d $(cut -f1 "$tmp/picked" | wc -l | tr -d ' ') hunk(s)"
+	fi
+}
+
+[ $# -gt 0 ] || { usage >&2; exit 1; }
+cmd=$1
+shift
+case $cmd in
+	-h | --help | help) usage; exit 0 ;;
+	list | stage | unstage) ;;
+	*) usage >&2; exit 1 ;;
+esac
+
+# Work from the top level: git apply ignores paths outside the current
+# directory. User paths are relative to where they ran us.
+prefix=$(git rev-parse --show-prefix)
+cd "$(git rev-parse --show-toplevel)"
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/hunk.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT
+trap 'exit 130' INT TERM
+
+if [ "$cmd" = list ]; then
+	staged=
+	if [ "${1:-}" = --staged ]; then staged=--staged; shift; fi
+	for p; do shift; set -- "$@" "$prefix$p"; done
+	list $staged "$@"
+else
+	apply "$cmd" "$@"
+fi

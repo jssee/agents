@@ -1,17 +1,18 @@
 ---
 name: commit
-description: Commit changes as atomic commits. Use whenever committing, whether asked directly or finishing a change.
+description: Maintain pristine, atomic history. Use when committing changes or revising existing commits.
 ---
 
 # Commit
 
-Record the work as **atomic** commits: each one coherent change, staged exactly, with a subject that describes the diff.
+Maintain **pristine, atomic history**. Rewrite it freely; never push without explicit permission.
 
-- Ask before committing on `main` or `master`.
-- Stage exactly the change. When a file mixes changes, stage hunks or lines with `scripts/hunk` (see `--help`). Leave unrelated work unstaged. When the work holds several changes, make several commits.
-- Read the staged diff before committing.
-- Make a normal commit by default. Use `--fixup=<sha>` only when the change corrects a mistake in one specific, unmerged commit on the current branch.
-- Subject: match the repo's recent style; otherwise `<label>: <summary>` with `feat`, `fix`, `ref`, `docs`, or `chore`. It says what changed in the repo, not what prompted it.
-- Add a body only for why. Reference issues only when the human supplied them. No AI attribution.
-- Only add commits: amending, rebasing, resetting, and pushing are the human's call.
-- When a hook fails, fix the cause and retry; hooks always run.
+- Stage hunks or lines across files with `scripts/hunk` (see `--help`).
+- Fold corrections into their original commit with `git history fixup <commit>`.
+- Correct messages with `git history reword <commit>`. Separate mixed commits with `git history split <commit>`.
+- For commands that open an editor, set `GIT_EDITOR` (or `GIT_SEQUENCE_EDITOR` for rebase todo lists).
+- Resolve obvious conflicts without asking; ask when what to preserve is unclear.
+- Match the repo's recent commit style; otherwise use `<label>: <summary>` with `feat`, `fix`, `ref`, `docs`, or `chore`. Write an imperative summary that completes: “If applied, this commit will <summary>.”
+- Add a body only for why. Reference issues only when the human supplied them. Omit AI attribution.
+- Run relevant checks after each commit or rewrite; `git history` skips hooks, so run them yourself. Never bypass hooks (`--no-verify`, `-n`). Report failures.
+- Finish with all intended changes committed and unrelated work preserved.

@@ -1,7 +1,6 @@
 ---
 name: shape
 description: Shape an idea or problem into a few viable approaches and a recommendation.
-disable-model-invocation: true
 ---
 
 # Shape

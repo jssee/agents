@@ -1,7 +1,6 @@
 ---
 name: trace
 description: Trace a proposed change through the existing code to ground it before building.
-disable-model-invocation: true
 ---
 
 # Trace

@@ -1,7 +1,6 @@
 ---
 name: slice
 description: Slice a clear build target into ordered, demoable vertical increments for review.
-disable-model-invocation: true
 ---
 
 # Slice

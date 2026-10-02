@@ -34,6 +34,10 @@ Default to one PR. Split into a **stack** (`gh stack`) only when a prefix of the
   - How it was verified.
 - Link tickets the human supplied. On GitHub each closing keyword closes one issue: `Closes #1, closes #2`. In a stack, only the PR that finishes a ticket closes it; earlier PRs say `Part of #1`.
 
+## Media
+
+Show visible changes so the reviewer sees the result without checking out the branch: screenshots, with a before when existing UI changes; video for interaction or motion. Attach with `gh pr create --attach`. `gh stack submit` cannot attach, so add media afterwards with `gh pr edit --attach`.
+
 ## Opening
 
 Open as a draft: `gh pr create --draft`, or `gh stack submit --auto` (drafts by default).

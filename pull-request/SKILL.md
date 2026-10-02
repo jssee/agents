@@ -26,12 +26,8 @@ Default to one PR. Split into a **stack** (`gh stack`) only when a prefix of the
 ## Title and body
 
 - Title: imperative, in the repo's convention. A single-commit PR reuses the commit subject.
-- Fill the repo's PR template when one exists.
-- The body is a **briefing**, not a lab notebook. A reviewer holding the diff learns:
-  - Why the change exists.
-  - What it changes, in behaviour rather than files.
-  - How to review it: where the risk is, what to read first.
-  - How it was verified.
+- The body is a **briefing**, not a lab notebook: a few sentences of plain prose, one paragraph at most. They tell a teammate holding the diff why the change exists, what it changes in behaviour, and where to look first. The commits and CI carry the proof.
+- When the repo has a PR template, fill it as written; it takes priority over this shape.
 - Link tickets the human supplied. On GitHub each closing keyword closes one issue: `Closes #1, closes #2`. In a stack, only the PR that finishes a ticket closes it; earlier PRs say `Part of #1`.
 
 ## Media

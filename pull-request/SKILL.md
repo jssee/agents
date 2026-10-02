@@ -21,7 +21,7 @@ Keep three units distinct:
 
 ## Stacking
 
-Default to one PR. Split into a **stack** (`gh stack`) only when a prefix of the commits is worth merging on its own: correct, useful, and safe to ship while the rest is in review. Length is a prompt to look for that seam, never a reason to split. Slice boundaries are natural seams.
+Default to one PR. Split into a **stack** (`gh stack`, install if not already available) only when a prefix of the commits is worth merging on its own: correct, useful, and safe to ship while the rest is in review. Length is a prompt to look for that seam, never a reason to split. Slice boundaries are natural seams.
 
 ## Title and body
 

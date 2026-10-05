@@ -11,9 +11,10 @@ Usage:
   hunk unstage [--dry-run] <id>[:<lines>]...
 
 list       Show unstaged hunks (staged with --staged), each with an id and
-           numbered body lines. Paths that only move whole (untracked, new,
-           deleted, binary, mode, submodule, conflict) are listed separately;
-           use git add, git rm, or git restore --staged for those.
+           numbered body lines. Mode changes and paths that only move whole
+           (untracked, new, deleted, binary, submodule, conflict) are listed
+           separately; use git add, git rm, git restore --staged, or
+           git update-index --chmod for those.
 stage      Stage hunks from `hunk list`.
 unstage    Unstage hunks from `hunk list --staged`.
 
@@ -46,11 +47,14 @@ diff_() {
 
 # Split a diff into $tmp: f.N (file header), h.N.M (hunk M of file N), and
 # a manifest of "N<TAB>M<TAB>kind<TAB>path" rows. M is 0 for whole-file paths.
+# Each hunk's id hashes k.N.M: its path and body, not its line numbers.
 scan() {
 	diff_ "$@" | awk -v dir="$tmp" '
 	function end_file() {
 		if (out != "") close(out)
-		out = ""
+		if (key != "") close(key)
+		out = key = ""
+		if (chmod) row(0, "mode")
 		if (n && !listed) row(0, kind == "text" ? "other" : kind)
 	}
 	function row(m, k) {
@@ -60,7 +64,7 @@ scan() {
 	BEGIN { man = dir "/manifest"; printf "" > man }
 	/^diff --/ {
 		end_file()
-		n++; m = 0; listed = 0; kind = "text"; out = dir "/f." n
+		n++; m = 0; listed = 0; chmod = 0; kind = "text"; out = dir "/f." n
 		if ($0 ~ /^diff --git "/) {
 			rest = substr($0, 12); path = substr(rest, 4, (length(rest) - 1) / 2 - 4)
 		} else if ($0 ~ /^diff --git /) {
@@ -76,24 +80,29 @@ scan() {
 		else if (kind == "text") {
 			if ($0 ~ /^new file mode/) kind = "new"
 			else if ($0 ~ /^deleted file mode/) kind = "deleted"
-			else if ($0 ~ /^old mode/) kind = "mode"
+			# Keep mode lines out of the header so staging a hunk stages
+			# only content; the mode change is listed as its own entry.
+			else if ($0 ~ /^(old|new) mode/) { chmod = 1; next }
 			else if ($0 ~ /^(Binary files |GIT binary patch)/) kind = "binary"
 		}
 	}
 	/^@@ / && kind != "conflict" {
-		close(out); m++; out = dir "/h." n "." m
-		if (kind == "text") row(m, "hunk")
-		else if (!listed) row(0, kind)
+		close(out); m++; out = dir "/h." n "." m; print > out
+		if (kind == "text") {
+			row(m, "hunk")
+			close(key); key = dir "/k." n "." m; print path > key
+		} else if (!listed) row(0, kind)
+		next
 	}
-	{ if (out != "") print > out }
+	{
+		if (out != "") print > out
+		if (key != "") print > key
+	}
 	END { end_file(); close(man) }
 	'
-	# Id each hunk by hashing its path and body (not its line numbers).
 	awk -F'\t' '$2 != 0' "$tmp/manifest" > "$tmp/hunks"
-	while IFS='	' read -r n m kind path; do
-		{ printf '%s\n' "$path"; sed 1d "$tmp/h.$n.$m"; } > "$tmp/k.$n.$m"
-		printf '%s\n' "$tmp/k.$n.$m"
-	done < "$tmp/hunks" | git hash-object --no-filters --stdin-paths > "$tmp/hashes"
+	awk -F'\t' -v dir="$tmp" '{ print dir "/k." $1 "." $2 }' "$tmp/hunks" |
+		git hash-object --no-filters --stdin-paths > "$tmp/hashes"
 	paste "$tmp/hashes" "$tmp/hunks" | awk -F'\t' -v OFS='\t' '{
 		id = substr($1, 1, 8)
 		if (seen[id]++) id = id "." seen[id]
@@ -105,17 +114,20 @@ list() {
 	staged=
 	if [ "${1:-}" = --staged ]; then staged=--cached; shift; fi
 	scan $staged -- "$@"
-	while IFS='	' read -r id n m path; do
-		printf '%s  %s  %s\n' "$id" "$path" "$(head -n 1 "$tmp/h.$n.$m")"
-		sed 1d "$tmp/h.$n.$m" | awk '{ printf "%4d %s\n", NR, $0 }'
-		echo
-	done < "$tmp/table"
+	awk -F'\t' -v dir="$tmp" '{
+		h = dir "/h." $2 "." $3
+		getline header < h
+		printf "%s  %s  %s\n", $1, $4, header
+		for (i = 1; (getline line < h) > 0; i++) printf "%4d %s\n", i, line
+		close(h)
+		print ""
+	}' "$tmp/table"
 	{
 		awk -F'\t' -v OFS='\t' '$2 == 0 { print $3, $4 }' "$tmp/manifest"
 		[ -n "$staged" ] || git ls-files --others --exclude-standard -- "$@" | sed 's/^/untracked	/'
 	} > "$tmp/whole"
 	if [ -s "$tmp/whole" ]; then
-		echo 'whole files (git add, git rm, git restore --staged):'
+		echo 'whole files (git add, git rm, git restore --staged, git update-index --chmod):'
 		awk -F'\t' '{ printf "  %-10s %s\n", $1, $2 }' "$tmp/whole"
 	fi
 	[ -s "$tmp/table" ] || [ -s "$tmp/whole" ] || echo "no ${staged:+staged }changes" >&2
@@ -126,6 +138,7 @@ list() {
 pick() {
 	awk -v id="$1" -v spec="$2" -v add="$3" '
 	function bad(msg) { print "hunk: " id ":" spec " " msg | "cat 1>&2"; failed = 1; exit 1 }
+	function keep(s) { line[++k] = s; kept = 1 }
 	BEGIN {
 		np = split(spec, parts, ",")
 		for (i = 1; i <= np; i++) {
@@ -140,16 +153,37 @@ pick() {
 	NR == 1 { print; next }
 	{
 		c = substr($0, 1, 1)
-		if (c == "\\") { if (kept) print }
-		else if (c == " ") { print; kept = 1 }
-		else if (want[NR - 1]) { print; kept = 1; changes++ }
+		if (c == "\\") { if (kept) nonl[k] = $0 }
+		else if (c == " ") keep($0)
+		else if (want[NR - 1]) { keep($0); changes++ }
 		else if (c == add) kept = 0
-		else { print " " substr($0, 2); kept = 1 }
+		else keep(" " substr($0, 2))
 	}
 	END {
 		if (failed) exit 1
 		if (max > NR - 1) bad("is past the end of a " NR - 1 "-line hunk")
 		if (!changes) bad("selects no changed lines")
+
+		# A "\ No newline" marker must end its side, but picking can leave
+		# lines on that side after it: drop the marker there, and split a
+		# context line so only the side it still ends keeps the marker.
+		for (i = k; i >= 1; i--) {
+			old_end[i] = !old_after; new_end[i] = !new_after
+			c = substr(line[i], 1, 1)
+			if (c != "+") old_after = 1
+			if (c != "-") new_after = 1
+		}
+		for (i = 1; i <= k; i++) {
+			c = substr(line[i], 1, 1); text = substr(line[i], 2)
+			if (!(i in nonl)) print line[i]
+			else if (c == " " && old_end[i] != new_end[i]) {
+				print "-" text; if (old_end[i]) print nonl[i]
+				print "+" text; if (new_end[i]) print nonl[i]
+			} else {
+				print line[i]
+				if (c == "+" ? new_end[i] : old_end[i]) print nonl[i]
+			}
+		}
 	}
 	'
 }

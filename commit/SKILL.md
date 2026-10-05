@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Maintain pristine, atomic history. Use when committing changes or revising existing commits.
+description: Maintain pristine, atomic history. Read before running `git add` or `git commit`, or rewriting commits.
 ---
 
 # Commit

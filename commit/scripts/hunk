@@ -11,9 +11,10 @@ Usage:
   hunk unstage [--dry-run] <id>[:<lines>]...
 
 list       Show unstaged hunks (staged with --staged), each with an id and
-           numbered body lines. Paths that only move whole (untracked, new,
-           deleted, binary, mode, submodule, conflict) are listed separately;
-           use git add, git rm, or git restore --staged for those.
+           numbered body lines. Mode changes and paths that only move whole
+           (untracked, new, deleted, binary, submodule, conflict) are listed
+           separately; use git add, git rm, git restore --staged, or
+           git update-index --chmod for those.
 stage      Stage hunks from `hunk list`.
 unstage    Unstage hunks from `hunk list --staged`.
 
@@ -51,6 +52,7 @@ scan() {
 	function end_file() {
 		if (out != "") close(out)
 		out = ""
+		if (chmod) row(0, "mode")
 		if (n && !listed) row(0, kind == "text" ? "other" : kind)
 	}
 	function row(m, k) {
@@ -60,7 +62,7 @@ scan() {
 	BEGIN { man = dir "/manifest"; printf "" > man }
 	/^diff --/ {
 		end_file()
-		n++; m = 0; listed = 0; kind = "text"; out = dir "/f." n
+		n++; m = 0; listed = 0; chmod = 0; kind = "text"; out = dir "/f." n
 		if ($0 ~ /^diff --git "/) {
 			rest = substr($0, 12); path = substr(rest, 4, (length(rest) - 1) / 2 - 4)
 		} else if ($0 ~ /^diff --git /) {
@@ -76,7 +78,9 @@ scan() {
 		else if (kind == "text") {
 			if ($0 ~ /^new file mode/) kind = "new"
 			else if ($0 ~ /^deleted file mode/) kind = "deleted"
-			else if ($0 ~ /^old mode/) kind = "mode"
+			# Keep mode lines out of the header so staging a hunk stages
+			# only content; the mode change is listed as its own entry.
+			else if ($0 ~ /^(old|new) mode/) { chmod = 1; next }
 			else if ($0 ~ /^(Binary files |GIT binary patch)/) kind = "binary"
 		}
 	}
@@ -115,7 +119,7 @@ list() {
 		[ -n "$staged" ] || git ls-files --others --exclude-standard -- "$@" | sed 's/^/untracked	/'
 	} > "$tmp/whole"
 	if [ -s "$tmp/whole" ]; then
-		echo 'whole files (git add, git rm, git restore --staged):'
+		echo 'whole files (git add, git rm, git restore --staged, git update-index --chmod):'
 		awk -F'\t' '{ printf "  %-10s %s\n", $1, $2 }' "$tmp/whole"
 	fi
 	[ -s "$tmp/table" ] || [ -s "$tmp/whole" ] || echo "no ${staged:+staged }changes" >&2

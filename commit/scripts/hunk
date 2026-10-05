@@ -47,11 +47,13 @@ diff_() {
 
 # Split a diff into $tmp: f.N (file header), h.N.M (hunk M of file N), and
 # a manifest of "N<TAB>M<TAB>kind<TAB>path" rows. M is 0 for whole-file paths.
+# Each hunk's id hashes k.N.M: its path and body, not its line numbers.
 scan() {
 	diff_ "$@" | awk -v dir="$tmp" '
 	function end_file() {
 		if (out != "") close(out)
-		out = ""
+		if (key != "") close(key)
+		out = key = ""
 		if (chmod) row(0, "mode")
 		if (n && !listed) row(0, kind == "text" ? "other" : kind)
 	}
@@ -85,19 +87,22 @@ scan() {
 		}
 	}
 	/^@@ / && kind != "conflict" {
-		close(out); m++; out = dir "/h." n "." m
-		if (kind == "text") row(m, "hunk")
-		else if (!listed) row(0, kind)
+		close(out); m++; out = dir "/h." n "." m; print > out
+		if (kind == "text") {
+			row(m, "hunk")
+			close(key); key = dir "/k." n "." m; print path > key
+		} else if (!listed) row(0, kind)
+		next
 	}
-	{ if (out != "") print > out }
+	{
+		if (out != "") print > out
+		if (key != "") print > key
+	}
 	END { end_file(); close(man) }
 	'
-	# Id each hunk by hashing its path and body (not its line numbers).
 	awk -F'\t' '$2 != 0' "$tmp/manifest" > "$tmp/hunks"
-	while IFS='	' read -r n m kind path; do
-		{ printf '%s\n' "$path"; sed 1d "$tmp/h.$n.$m"; } > "$tmp/k.$n.$m"
-		printf '%s\n' "$tmp/k.$n.$m"
-	done < "$tmp/hunks" | git hash-object --no-filters --stdin-paths > "$tmp/hashes"
+	awk -F'\t' -v dir="$tmp" '{ print dir "/k." $1 "." $2 }' "$tmp/hunks" |
+		git hash-object --no-filters --stdin-paths > "$tmp/hashes"
 	paste "$tmp/hashes" "$tmp/hunks" | awk -F'\t' -v OFS='\t' '{
 		id = substr($1, 1, 8)
 		if (seen[id]++) id = id "." seen[id]
@@ -109,11 +114,14 @@ list() {
 	staged=
 	if [ "${1:-}" = --staged ]; then staged=--cached; shift; fi
 	scan $staged -- "$@"
-	while IFS='	' read -r id n m path; do
-		printf '%s  %s  %s\n' "$id" "$path" "$(head -n 1 "$tmp/h.$n.$m")"
-		sed 1d "$tmp/h.$n.$m" | awk '{ printf "%4d %s\n", NR, $0 }'
-		echo
-	done < "$tmp/table"
+	awk -F'\t' -v dir="$tmp" '{
+		h = dir "/h." $2 "." $3
+		getline header < h
+		printf "%s  %s  %s\n", $1, $4, header
+		for (i = 1; (getline line < h) > 0; i++) printf "%4d %s\n", i, line
+		close(h)
+		print ""
+	}' "$tmp/table"
 	{
 		awk -F'\t' -v OFS='\t' '$2 == 0 { print $3, $4 }' "$tmp/manifest"
 		[ -n "$staged" ] || git ls-files --others --exclude-standard -- "$@" | sed 's/^/untracked	/'

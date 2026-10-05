@@ -126,6 +126,7 @@ list() {
 pick() {
 	awk -v id="$1" -v spec="$2" -v add="$3" '
 	function bad(msg) { print "hunk: " id ":" spec " " msg | "cat 1>&2"; failed = 1; exit 1 }
+	function keep(s) { line[++k] = s; kept = 1 }
 	BEGIN {
 		np = split(spec, parts, ",")
 		for (i = 1; i <= np; i++) {
@@ -140,16 +141,37 @@ pick() {
 	NR == 1 { print; next }
 	{
 		c = substr($0, 1, 1)
-		if (c == "\\") { if (kept) print }
-		else if (c == " ") { print; kept = 1 }
-		else if (want[NR - 1]) { print; kept = 1; changes++ }
+		if (c == "\\") { if (kept) nonl[k] = $0 }
+		else if (c == " ") keep($0)
+		else if (want[NR - 1]) { keep($0); changes++ }
 		else if (c == add) kept = 0
-		else { print " " substr($0, 2); kept = 1 }
+		else keep(" " substr($0, 2))
 	}
 	END {
 		if (failed) exit 1
 		if (max > NR - 1) bad("is past the end of a " NR - 1 "-line hunk")
 		if (!changes) bad("selects no changed lines")
+
+		# A "\ No newline" marker must end its side, but picking can leave
+		# lines on that side after it: drop the marker there, and split a
+		# context line so only the side it still ends keeps the marker.
+		for (i = k; i >= 1; i--) {
+			old_end[i] = !old_after; new_end[i] = !new_after
+			c = substr(line[i], 1, 1)
+			if (c != "+") old_after = 1
+			if (c != "-") new_after = 1
+		}
+		for (i = 1; i <= k; i++) {
+			c = substr(line[i], 1, 1); text = substr(line[i], 2)
+			if (!(i in nonl)) print line[i]
+			else if (c == " " && old_end[i] != new_end[i]) {
+				print "-" text; if (old_end[i]) print nonl[i]
+				print "+" text; if (new_end[i]) print nonl[i]
+			} else {
+				print line[i]
+				if (c == "+" ? new_end[i] : old_end[i]) print nonl[i]
+			}
+		}
 	}
 	'
 }

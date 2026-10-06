@@ -1,9 +1,9 @@
 #!/bin/sh
-# Tests for skills/commit/scripts/hunk, each in a throwaway repo.
+# Tests for commit/scripts/hunk, each in a throwaway repo.
 # Run: sh tests/hunk.test.sh (HUNK=path overrides the script under test)
 set -u
 
-HUNK=${HUNK:-"$(cd "$(dirname "$0")/.." && pwd)/skills/commit/scripts/hunk"}
+HUNK=${HUNK:-"$(cd "$(dirname "$0")/.." && pwd)/commit/scripts/hunk"}
 root=$(mktemp -d "${TMPDIR:-/tmp}/hunk-test.XXXXXX")
 trap 'rm -rf "$root"' EXIT
 

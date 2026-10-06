@@ -1,21 +1,14 @@
-# Agents Repository
+# agents
 
-This repository contains the core skills and configuration for our agent ecosystem.
+Agent skills, one per top-level directory with a `SKILL.md`.
 
-## Skills
+`origin` pushes to GitHub and to the Amp personal skills repository, so one `git push` publishes to both. Amp loads the skills from the latter everywhere, including orbs. Other agents install from GitHub:
 
-Skills define specialized, reusable capabilities for the agent.
+```sh
+npx skills add jssee/agents          # project
+npx skills add jssee/agents -g       # global
+```
 
-- **`commit`**: Preserves clean, reviewable git history. Use for committing related work.
-- **`prefer-less`**: The unified skill for bias-toward-simplicity. Handles three contexts:
-  - **Editing**: Small-patch discipline for existing code.
-  - **Polishing**: Behavior-preserving pre-commit cleanup.
-  - **Designing**: Strategic evaluation of designs/refactors using mindset references.
-- **`shaping`**: Aligns fuzzy ideas before implementation (clarification → requirements → shapes → fit-check → recommendation).
-- **`slicing`**: Sequences work into small, demo-able vertical slices.
-- **`write-skill`**: Standardizes the creation and auditing of new skills using templates and checklists.
+`writing-for-agents` and `thermo-nuclear-code-quality-review` are copies from `mattpocock/skills` and `cursor/plugins`.
 
-## Development
-
-- **Adding a new skill**: Use the `write-skill` meta-skill to generate the initial structure and audit the final result.
-- **Updating a skill**: Ensure adherence to the current `write-skill` standards and line count targets.
+`tests/hunk.test.sh` tests `commit/scripts/hunk`.

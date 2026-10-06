@@ -9,6 +9,4 @@ npx skills add jssee/agents          # project
 npx skills add jssee/agents -g       # global
 ```
 
-`writing-for-agents` and `thermo-nuclear-code-quality-review` are copies from `mattpocock/skills` and `cursor/plugins`.
-
 `tests/hunk.test.sh` tests `commit/scripts/hunk`.

@@ -7,7 +7,7 @@ description: Maintain pristine, atomic history. Read before running `git add` or
 
 Maintain **pristine, atomic history**. Rewrite it freely; never push without explicit permission.
 
-- Stage hunks or lines across files with `scripts/hunk` (see `--help`).
+- Stage hunks or lines across files with `sh scripts/hunk` (see `--help`).
 - Fold corrections into their original commit with `git history fixup <commit>`.
 - Correct messages with `git history reword <commit>`. Separate mixed commits with `git history split <commit>`.
 - For commands that open an editor, set `GIT_EDITOR` (or `GIT_SEQUENCE_EDITOR` for rebase todo lists).

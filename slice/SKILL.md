@@ -5,31 +5,27 @@ description: Slice a clear build target into ordered, demoable vertical incremen
 
 # Slice
 
-Cut a clear build target into ordered **slices**: narrow end-to-end paths through the real system, each ending in a **demo** that is reviewed before work moves on. A slice may span several commits.
+A **slice** is a narrow end-to-end path through the real system that ends in a **demo**: something someone can do afterward that they couldn't before. Slices sequence the work, not the commits; one slice usually lands as several commits, each kept reviewable.
 
-Read and run code to find real seams.
+Read the code before slicing so the seams are real.
 
-## Cutting
+- Write each demo as "after this, <actor> can ___." If you can't, the slice is a horizontal layer; recut it.
+- V1 is the **walking skeleton**. Find it by asking: "What's the smallest end-to-end path that shows the core mechanism working?" Defer anything that refines the mechanism rather than proves it.
+- Each later slice adds one capability and fits in a single fresh context window.
+- Fold setup, migrations, and refactors into the first slice that needs them; stub the edges if that makes it too big.
+- Order by dependency.
 
-- End every slice with a demo sentence: "after this, someone can ___." If you can't write it, the slice is a horizontal layer; recut it.
-- **V1** is the **walking skeleton**: the thinnest end-to-end path that proves the chosen direction.
-- Each later slice adds one capability, small enough to review in one sitting.
-- Put supporting work (setup, migrations, refactors) in the first slice that needs it. If that makes the slice too big, stub or hardcode the edges.
-- Order by dependency, then risk (riskiest first), then user value.
-- Mark the **cut line** where the target is met; slices below it are optional.
-- Mark a slice **ungrounded** when it depends on a mechanism nobody understands yet.
+## Output
 
-## Handoff
+A table of every slice, then V1 in detail.
 
-Make the next slice **handoff-ready**: give a builder enough context to build it from the slice alone. Include:
+| #   | Demo | Depends on |
+| --- | ---- | ---------- |
 
-- What the demo proves.
-- Supporting work.
-- Mechanisms it touches, with pointers.
-- Scope boundary: what belongs to later slices.
+### V1: <name>
 
-The builder stops at the demo and reports back.
+- **Proves:** what the demo shows about the direction.
+- **Supporting work:** setup, migrations, or refactors V1 must include.
+- **Out of scope:** what later slices own.
 
-Later slices remain **fog of war**. Give each one line: demo sentence, dependencies, blockers.
-
-At each checkpoint, revise the remaining slices within the target and make the next one handoff-ready. New work goes below the cut line.
+The builder stops at V1's demo and reports back.
